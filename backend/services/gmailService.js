@@ -93,7 +93,7 @@ class GmailService {
 
   // Check if authenticated
   checkAuthentication() {
-    return this.isAuthenticated && this.oauth2Client?.credentials?.access_token;
+    return !!(this.isAuthenticated && this.oauth2Client?.credentials?.access_token);
   }
 
   // Get Gmail client

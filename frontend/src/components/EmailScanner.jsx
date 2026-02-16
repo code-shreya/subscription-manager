@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Mail, RefreshCw, CheckCircle, XCircle, Sparkles, AlertTriangle, Download, Zap, Check, Search } from 'lucide-react';
 import DeepScanInsights from './DeepScanInsights';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const categoryColors = {
   confirmed_subscription: { bg: 'bg-emerald-500', border: 'border-emerald-300', text: 'text-emerald-700', gradient: 'from-emerald-500 to-teal-600' },
@@ -30,10 +30,14 @@ export default function EmailScanner() {
   const checkConnection = async () => {
     try {
       const response = await fetch(`${API_BASE}/gmail/status`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       const data = await response.json();
-      setIsConnected(data.connected);
+      setIsConnected(!!data.connected); // Convert to boolean
     } catch (error) {
       console.error('Failed to check connection:', error);
+      setIsConnected(false);
     } finally {
       setLoading(false);
     }
@@ -42,10 +46,14 @@ export default function EmailScanner() {
   const loadDetected = async () => {
     try {
       const response = await fetch(`${API_BASE}/gmail/detected`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       const data = await response.json();
       setDetectedSubs(data.detected || []);
     } catch (error) {
       console.error('Failed to load detected:', error);
+      setDetectedSubs([]);
     }
   };
 
