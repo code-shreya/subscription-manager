@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Database files (JSON storage)
+backend/subscriptions.json
+backend/detected-subscriptions.json
+backend/connected-accounts.json
+backend/transactions.json
+backend/detected-from-bank.json
+backend/notifications.json
+
+# Gmail token
+backend/token.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+tmp/
+temp/
+backend/gmail-token.json
+backend/token.json

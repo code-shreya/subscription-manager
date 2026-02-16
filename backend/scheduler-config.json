@@ -1,0 +1,9 @@
+{
+  "autoScanEnabled": true,
+  "scanSchedule": "0 8 * * *",
+  "scanDaysBack": 7,
+  "maxEmailsPerScan": 50,
+  "autoImportConfirmed": false,
+  "lastScanTime": null,
+  "lastScanStatus": null
+}
