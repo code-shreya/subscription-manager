@@ -122,7 +122,7 @@ Important:
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o', // More accurate for complex extraction
+        model: 'gpt-4o-mini', // Fast and cost-effective
         messages: [
           {
             role: 'system',
