@@ -4,6 +4,6 @@
   "scanDaysBack": 7,
   "maxEmailsPerScan": 50,
   "autoImportConfirmed": false,
-  "lastScanTime": null,
-  "lastScanStatus": null
+  "lastScanTime": "2026-02-16T02:30:00.073Z",
+  "lastScanStatus": "failed"
 }
