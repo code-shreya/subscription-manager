@@ -70,23 +70,36 @@ export default function Dashboard() {
 
   const totalSpending = pieData.reduce((sum, item) => sum + item.value, 0);
 
-  // Custom label renderer for pie chart
-  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+  // Custom label renderer for pie chart with category names
+  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
     if (percent < 0.05) return null;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
     const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+
     return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        className="font-medium text-xs"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
+      <g>
+        <text
+          x={x}
+          y={y - 8}
+          fill="white"
+          textAnchor="middle"
+          dominantBaseline="central"
+          className="font-semibold text-sm"
+        >
+          {name}
+        </text>
+        <text
+          x={x}
+          y={y + 8}
+          fill="white"
+          textAnchor="middle"
+          dominantBaseline="central"
+          className="font-medium text-xs"
+        >
+          {`${(percent * 100).toFixed(0)}%`}
+        </text>
+      </g>
     );
   };
 
