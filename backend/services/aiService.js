@@ -154,21 +154,31 @@ Important:
     }
   }
 
-  // Batch process multiple emails
+  // Batch process multiple emails with parallel processing for speed
   async processEmailBatch(emails) {
-    console.log(`🤖 Processing ${emails.length} emails with AI...`);
+    console.log(`🤖 Processing ${emails.length} emails with AI (parallel mode)...`);
 
-    const results = [];
     const confirmationEmails = [];
     const otherEmails = [];
     let foundCount = 0;
+    const PARALLEL_BATCH_SIZE = 5; // Process 5 emails at once
 
-    for (const email of emails) {
-      try {
-        const extraction = await this.extractSubscriptionFromEmail(email);
+    // Process emails in parallel batches
+    for (let i = 0; i < emails.length; i += PARALLEL_BATCH_SIZE) {
+      const batch = emails.slice(i, i + PARALLEL_BATCH_SIZE);
+      const batchPromises = batch.map(email =>
+        this.extractSubscriptionFromEmail(email).catch(error => {
+          console.error(`Error processing email ${email.id}:`, error.message);
+          return { isSubscription: false, error: error.message };
+        })
+      );
 
+      // Process batch in parallel
+      const batchResults = await Promise.all(batchPromises);
+
+      // Collect results
+      for (const extraction of batchResults) {
         if (extraction.isSubscription && extraction.confidence >= 60) {
-          // Separate confirmation emails from other types
           if (extraction.isConfirmationEmail) {
             confirmationEmails.push(extraction);
             console.log(`✅ Found confirmation: ${extraction.serviceName} - ₹${extraction.amount || 'N/A'} (${extraction.foundKeywords?.join(', ')})`);
@@ -178,12 +188,16 @@ Important:
           }
           foundCount++;
         }
-
-        // Rate limiting - don't overwhelm the API
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      } catch (error) {
-        console.error(`Error processing email ${email.id}:`, error.message);
       }
+
+      // Small delay between batches to respect rate limits
+      if (i + PARALLEL_BATCH_SIZE < emails.length) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+
+      // Progress update
+      const progress = Math.min(100, Math.round(((i + PARALLEL_BATCH_SIZE) / emails.length) * 100));
+      console.log(`📊 Progress: ${progress}% (${i + PARALLEL_BATCH_SIZE}/${emails.length} emails)`);
     }
 
     // Prioritize confirmation emails first
