@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LayoutDashboard, List, Calendar, Mail, Settings as SettingsIcon, Building2, Bell } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import SubscriptionList from './components/SubscriptionList';
@@ -7,9 +7,29 @@ import EmailScanner from './components/EmailScanner';
 import Settings from './components/Settings';
 import ConnectedAccounts from './components/ConnectedAccounts';
 import NotificationBell from './components/NotificationBell';
+import LandingPage from './components/LandingPage';
 
 function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Check if user has already entered demo (stored in localStorage)
+  useEffect(() => {
+    const hasEnteredDemo = localStorage.getItem('submanager_entered_demo');
+    if (hasEnteredDemo === 'true') {
+      setShowLanding(false);
+    }
+  }, []);
+
+  const handleEnterDemo = () => {
+    localStorage.setItem('submanager_entered_demo', 'true');
+    setShowLanding(false);
+  };
+
+  // Show landing page if user hasn't entered demo yet
+  if (showLanding) {
+    return <LandingPage onEnterDemo={handleEnterDemo} />;
+  }
 
   const tabs = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
