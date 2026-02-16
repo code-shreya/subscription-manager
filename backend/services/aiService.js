@@ -41,7 +41,7 @@ Email Details:
 - Subject: ${subject}
 - From: ${from}
 - Date: ${date}
-- Body: ${body.substring(0, 2000)}
+- Body: ${body.substring(0, 4000)}
 
 Extract and return a JSON object with these fields:
 {
@@ -53,7 +53,7 @@ Extract and return a JSON object with these fields:
   "currency": "currency code (e.g., USD, INR, EUR) or null",
   "billingCycle": "monthly" or "yearly" or "one-time",
   "nextBillingDate": "YYYY-MM-DD format (look for explicit dates in the email)",
-  "category": "one of: Streaming, Music, Productivity, Cloud Storage, Gaming, News & Media, Fitness, Software, Other",
+  "category": "one of: Streaming, Music, Productivity, Cloud Storage, Gaming, News & Media, Fitness, Software, Investment, Rentals, Other",
   "confidence": 0-100 (how confident you are this is a subscription),
   "description": "brief description of what was detected",
   "foundKeywords": ["list of confirmation keywords found in email"]
@@ -65,20 +65,30 @@ Email Type Guidelines:
 - "failed_payment": Payment failures, unsuccessful charges, payment method issues
 - "other": General notifications, promotional emails, account updates
 
-AMOUNT EXTRACTION - CRITICAL:
-Look for amounts in these formats:
+AMOUNT EXTRACTION - CRITICAL (READ ENTIRE EMAIL BODY):
+Search the ENTIRE email for amounts in these patterns:
 - "₹650/month" → amount: 650, currency: "INR", billingCycle: "monthly"
-- "INR 650.00" → amount: 650, currency: "INR"
+- "INR 650.00" OR "Rs. 650" OR "₹650" → amount: 650, currency: "INR"
 - "$9.99 per month" → amount: 9.99, currency: "USD", billingCycle: "monthly"
-- "Rs. 199" → amount: 199, currency: "INR"
-- "₹1,234" → amount: 1234, currency: "INR"
-- "Amount: ₹500" → amount: 500, currency: "INR"
-- "Total: $15.99" → amount: 15.99, currency: "USD"
-- "Payment of ₹888" → amount: 888, currency: "INR"
-- In HTML tables look for <td> tags with amounts
-- Check for "charged", "billed", "payment", "total", "amount" keywords near numbers
-- Parse comma-separated numbers correctly (1,234 = 1234)
-- If you see multiple amounts, choose the subscription/recurring amount (not setup fees)
+- "Amount: ₹500" OR "Total: ₹500" OR "Payment: ₹500" → amount: 500
+- "₹1,234.56" OR "₹1,234" → amount: 1234.56 or 1234, parse commas correctly
+- "You paid ₹888" OR "Charged ₹888" OR "Billed ₹888" → amount: 888
+
+Where to look (check ALL these locations):
+1. Email subject line (highest priority for price)
+2. First 500 characters of body (payment summaries)
+3. HTML tables with <td> tags containing amounts
+4. Sections with headers like "Payment Details", "Invoice", "Receipt", "Transaction"
+5. Lines containing keywords: "charged", "billed", "payment", "total", "amount", "price", "paid", "debited"
+6. Near subscription name or plan name
+7. Footer or signature (sometimes has pricing)
+
+Important rules:
+- Parse comma-separated numbers: "1,234" = 1234 (NOT 1.234)
+- If you see multiple amounts, choose the subscription/recurring amount (NOT setup fees, NOT discounts)
+- Look for the LARGEST amount that appears with subscription/plan/membership context
+- Check decimal places: ₹650.50 has decimals, ₹650 does not
+- **NEVER return null if you find ANY number with currency symbol near subscription keywords**
 
 CURRENCY DETECTION:
 - ₹ or Rs or INR → "INR"
@@ -91,6 +101,16 @@ BILLING CYCLE DETECTION:
 - Look for: "per year", "/year", "yearly", "annually", "every year" → "yearly"
 - If no cycle mentioned but it's a subscription confirmation → default to "monthly"
 
+CATEGORY DETECTION - IMPORTANT:
+- "Investment": Groww, Zerodha, Upstox, mutual funds, SIP, stocks, trading platforms, investment apps
+- "Rentals": Furlenco, RentoMojo, furniture rental, equipment rental, vehicle rental, lease
+- "Streaming": Netflix, Prime Video, Disney+, Hotstar, YouTube Premium, streaming services
+- "Music": Spotify, Apple Music, Amazon Music, Gaana, JioSaavn
+- "Productivity": Notion, Evernote, Microsoft 365, Google Workspace, Slack
+- "Software": Adobe, GitHub, development tools, SaaS products
+- "Fitness": gym memberships, fitness apps, health subscriptions
+- Choose the MOST SPECIFIC category that matches the service
+
 Important:
 - Only return valid JSON, no extra text
 - If not a subscription email, return: {"isSubscription": false}
@@ -102,7 +122,7 @@ Important:
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini', // Fast and cost-effective
+        model: 'gpt-4o', // More accurate for complex extraction
         messages: [
           {
             role: 'system',
