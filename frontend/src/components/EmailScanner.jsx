@@ -21,6 +21,7 @@ export default function EmailScanner() {
   const [loading, setLoading] = useState(true);
   const [showInsights, setShowInsights] = useState(false);
   const [deepScanResults, setDeepScanResults] = useState(null);
+  const [scanProgress, setScanProgress] = useState({ current: 0, total: 0, phase: '' });
 
   useEffect(() => {
     checkConnection();
@@ -81,34 +82,90 @@ export default function EmailScanner() {
 
   const handleScan = async () => {
     setScanning(true);
+    setScanProgress({ current: 0, total: 100, phase: 'Searching emails...' });
+
     try {
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setScanProgress(prev => {
+          if (prev.current < prev.total) {
+            return {
+              ...prev,
+              current: Math.min(prev.current + Math.random() * 10, prev.total - 5),
+              phase: prev.current < 30 ? 'Searching emails...'
+                    : prev.current < 60 ? 'Fetching email details...'
+                    : 'Processing with AI...'
+            };
+          }
+          return prev;
+        });
+      }, 500);
+
       const response = await fetch(`${API_BASE}/gmail/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ maxResults: 100, daysBack: 365 }),
       });
 
+      clearInterval(progressInterval);
+      setScanProgress({ current: 100, total: 100, phase: 'Complete!' });
+
       if (response.ok) {
+        const data = await response.json();
         await loadDetected();
         window.dispatchEvent(new CustomEvent('subscriptions-updated'));
+
+        // Show completion message
+        setTimeout(() => {
+          alert(`✅ Scan complete! Found ${data.count} subscriptions from ${data.scannedEmails} emails.`);
+        }, 300);
       }
     } catch (error) {
       console.error('Scan failed:', error);
+      setScanProgress({ current: 0, total: 0, phase: 'Failed' });
     } finally {
-      setScanning(false);
+      setTimeout(() => {
+        setScanning(false);
+        setScanProgress({ current: 0, total: 0, phase: '' });
+      }, 1000);
     }
   };
 
   const handleDeepScan = async () => {
-    if (!confirm('Deep scan will analyze all emails from the past 365 days with advanced insights. This may take 5-10 minutes. Continue?')) {
+    if (!confirm('🔍 Deep scan will analyze all emails from the past 365 days with advanced insights. This may take 5-10 minutes. Continue?')) {
       return;
     }
 
     setDeepScanning(true);
+    setScanProgress({ current: 0, total: 365, phase: 'Initializing deep scan...' });
+
     try {
+      // Simulate progress for deep scan
+      const progressInterval = setInterval(() => {
+        setScanProgress(prev => {
+          if (prev.current < prev.total) {
+            const increment = Math.random() * 15;
+            const newCurrent = Math.min(prev.current + increment, prev.total - 10);
+            return {
+              ...prev,
+              current: newCurrent,
+              phase: newCurrent < 50 ? 'Searching emails (365 days)...'
+                    : newCurrent < 150 ? 'Fetching email details...'
+                    : newCurrent < 250 ? 'Processing with AI...'
+                    : newCurrent < 320 ? 'Analyzing patterns...'
+                    : 'Generating insights...'
+            };
+          }
+          return prev;
+        });
+      }, 800);
+
       const response = await fetch(`${API_BASE}/gmail/deep-scan`, {
         method: 'POST',
       });
+
+      clearInterval(progressInterval);
+      setScanProgress({ current: 365, total: 365, phase: 'Complete!' });
 
       if (!response.ok) {
         throw new Error('Deep scan failed');
@@ -125,9 +182,13 @@ export default function EmailScanner() {
       window.dispatchEvent(new CustomEvent('subscriptions-updated'));
     } catch (error) {
       console.error('Deep scan error:', error);
-      alert('Deep scan failed: ' + error.message);
+      alert('❌ Deep scan failed: ' + error.message);
+      setScanProgress({ current: 0, total: 0, phase: 'Failed' });
     } finally {
-      setDeepScanning(false);
+      setTimeout(() => {
+        setDeepScanning(false);
+        setScanProgress({ current: 0, total: 0, phase: '' });
+      }, 1500);
     }
   };
 
@@ -274,6 +335,34 @@ export default function EmailScanner() {
           </div>
         </div>
       </div>
+
+      {/* Scan Progress Indicator */}
+      {(scanning || deepScanning) && scanProgress.total > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+              <span className="text-sm font-semibold text-[#24292f]">{scanProgress.phase}</span>
+            </div>
+            <span className="text-sm font-medium text-gray-600">
+              {Math.round((scanProgress.current / scanProgress.total) * 100)}%
+            </span>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-blue-100 rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-[#0969da] h-2 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%` }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+            <span>{deepScanning ? 'Deep scanning may take 5-10 minutes' : 'Analyzing emails...'}</span>
+            <span>{Math.round(scanProgress.current)}/{scanProgress.total} emails</span>
+          </div>
+        </div>
+      )}
 
       {/* Bulk Actions */}
       {selectedSubs.size > 0 && (
