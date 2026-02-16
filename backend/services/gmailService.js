@@ -105,39 +105,93 @@ class GmailService {
     return google.gmail({ version: 'v1', auth: this.oauth2Client });
   }
 
-  // Search for subscription-related emails
-  async searchSubscriptionEmails(maxResults = 50, daysBack = 90) {
+  // Search for subscription-related emails with pagination support
+  async searchSubscriptionEmails(maxResults = 200, daysBack = 365, pageToken = null) {
     try {
       const gmail = this.getGmailClient();
 
-      // Calculate date for query (90 days back)
+      // Calculate date for query (365 days back for full year analysis)
       const date = new Date();
       date.setDate(date.getDate() - daysBack);
       const dateString = date.toISOString().split('T')[0].replace(/-/g, '/');
 
-      // Search query for subscription-related emails (PRIORITIZE confirmation emails)
+      // Enhanced search query with more subscription patterns
       const query = `after:${dateString} (
         subject:(
           "subscription successful" OR "subscription started" OR "subscription confirmed" OR
           "welcome to your subscription" OR "subscription activated" OR
           subscription OR renewal OR billing OR invoice OR payment OR receipt OR
-          "next billing" OR "cancel anytime" OR "manage subscription"
+          "next billing" OR "cancel anytime" OR "manage subscription" OR
+          "your plan" OR "membership" OR "auto-renewal" OR "recurring" OR
+          "billed monthly" OR "billed annually" OR "subscription fee" OR
+          "premium" OR "pro plan" OR "paid plan"
         )
-        OR from:(noreply OR billing OR subscriptions OR welcome)
+        OR from:(
+          noreply OR billing OR subscriptions OR welcome OR payments OR
+          netflix OR spotify OR amazon OR google OR apple OR microsoft OR
+          hotstar OR zomato OR swiggy OR zerodha OR groww
+        )
       )`;
 
-      const response = await gmail.users.messages.list({
+      const requestParams = {
         userId: 'me',
         q: query,
-        maxResults: maxResults,
-      });
+        maxResults: Math.min(maxResults, 500), // Gmail API limit
+      };
+
+      if (pageToken) {
+        requestParams.pageToken = pageToken;
+      }
+
+      const response = await gmail.users.messages.list(requestParams);
 
       const messages = response.data.messages || [];
-      console.log(`📧 Found ${messages.length} potential subscription emails`);
+      console.log(`📧 Found ${messages.length} potential subscription emails in this batch`);
 
-      return messages;
+      return {
+        messages,
+        nextPageToken: response.data.nextPageToken,
+        totalFound: messages.length,
+      };
     } catch (error) {
       console.error('Error searching emails:', error.message);
+      throw error;
+    }
+  }
+
+  // Deep scan: paginate through all results for 365-day analysis
+  async deepScanAllEmails(daysBack = 365, progressCallback = null) {
+    try {
+      let allMessages = [];
+      let pageToken = null;
+      let pageCount = 0;
+
+      do {
+        pageCount++;
+        console.log(`📄 Fetching page ${pageCount}...`);
+
+        const result = await this.searchSubscriptionEmails(500, daysBack, pageToken);
+        allMessages = allMessages.concat(result.messages);
+        pageToken = result.nextPageToken;
+
+        if (progressCallback) {
+          progressCallback({
+            page: pageCount,
+            totalSoFar: allMessages.length,
+            hasMore: !!pageToken,
+          });
+        }
+
+        // Rate limiting between pages
+        if (pageToken) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      } while (pageToken && allMessages.length < 1000); // Safety limit
+
+      console.log(`📬 Total emails found across ${daysBack} days: ${allMessages.length}`);
+      return allMessages;
+    } catch (error) {
+      console.error('Error in deep scan:', error.message);
       throw error;
     }
   }
@@ -190,23 +244,96 @@ class GmailService {
     }
   }
 
-  // Scan emails and return detailed content
-  async scanEmails(maxResults = 20, daysBack = 90) {
+  // Scan emails and return detailed content with progress tracking
+  async scanEmails(maxResults = 20, daysBack = 90, progressCallback = null) {
     try {
-      const messages = await this.searchSubscriptionEmails(maxResults, daysBack);
+      const result = await this.searchSubscriptionEmails(maxResults, daysBack);
+      const messages = result.messages || [];
 
       const emailDetails = [];
-      for (const message of messages.slice(0, maxResults)) {
+      const total = Math.min(messages.length, maxResults);
+
+      for (let i = 0; i < total; i++) {
+        const message = messages[i];
         const details = await this.getEmailDetails(message.id);
+
         if (details) {
           emailDetails.push(details);
         }
+
+        if (progressCallback) {
+          progressCallback({
+            current: i + 1,
+            total: total,
+            percentage: Math.round(((i + 1) / total) * 100),
+          });
+        }
+
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
       console.log(`📬 Retrieved ${emailDetails.length} email details`);
       return emailDetails;
     } catch (error) {
       console.error('Error scanning emails:', error.message);
+      throw error;
+    }
+  }
+
+  // Deep 365-day scan with full analysis
+  async deepScan365Days(progressCallback = null) {
+    try {
+      console.log('🔍 Starting deep 365-day email scan...');
+
+      // Get all messages from past year
+      const messages = await this.deepScanAllEmails(365, (progress) => {
+        if (progressCallback) {
+          progressCallback({
+            phase: 'searching',
+            ...progress,
+          });
+        }
+      });
+
+      console.log(`📧 Retrieving details for ${messages.length} emails...`);
+
+      // Fetch email details in batches
+      const emailDetails = [];
+      const batchSize = 50;
+      const totalBatches = Math.ceil(messages.length / batchSize);
+
+      for (let batch = 0; batch < totalBatches; batch++) {
+        const start = batch * batchSize;
+        const end = Math.min(start + batchSize, messages.length);
+        const batchMessages = messages.slice(start, end);
+
+        console.log(`📦 Processing batch ${batch + 1}/${totalBatches} (${start}-${end})...`);
+
+        for (const message of batchMessages) {
+          const details = await this.getEmailDetails(message.id);
+          if (details) {
+            emailDetails.push(details);
+          }
+
+          if (progressCallback) {
+            progressCallback({
+              phase: 'fetching',
+              current: emailDetails.length,
+              total: messages.length,
+              percentage: Math.round((emailDetails.length / messages.length) * 100),
+            });
+          }
+
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+
+      console.log(`✅ Deep scan complete: ${emailDetails.length} emails retrieved`);
+      return emailDetails;
+    } catch (error) {
+      console.error('Error in deep 365-day scan:', error.message);
       throw error;
     }
   }

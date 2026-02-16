@@ -19,6 +19,7 @@ backend/connected-accounts.json
 backend/transactions.json
 backend/detected-from-bank.json
 backend/notifications.json
+backend/subscription-history.json
 
 # Gmail token
 backend/token.json

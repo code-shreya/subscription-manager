@@ -393,6 +393,76 @@ app.post('/api/gmail/scan', async (req, res) => {
   }
 });
 
+// Deep 365-day scan with analysis
+app.post('/api/gmail/deep-scan', async (req, res) => {
+  try {
+    // Check authentication
+    if (!gmailService.checkAuthentication()) {
+      return res.status(401).json({ error: 'Gmail not connected' });
+    }
+
+    // Check AI service
+    if (!aiService.openai) {
+      return res.status(500).json({ error: 'AI service not configured. Please add OPENAI_API_KEY to .env' });
+    }
+
+    console.log('🔍 Starting DEEP 365-day email scan with analysis...');
+
+    // Import analysis service
+    const { default: analysisService } = await import('./services/analysisService.js');
+
+    // Perform deep scan
+    const emails = await gmailService.deepScan365Days((progress) => {
+      console.log(`Progress: ${progress.phase} - ${progress.percentage || 0}%`);
+    });
+
+    if (emails.length === 0) {
+      return res.json({
+        detected: [],
+        analysis: null,
+        message: 'No subscription emails found in the past 365 days',
+      });
+    }
+
+    console.log(`🤖 Processing ${emails.length} emails with AI...`);
+
+    // Process with AI
+    const detectedSubscriptions = await aiService.processEmailBatch(emails);
+
+    // Deduplicate
+    const deduplicated = analysisService.deduplicateSubscriptions(detectedSubscriptions);
+
+    // Detect price changes
+    const priceChanges = await analysisService.detectPriceChanges(deduplicated);
+
+    // Generate insights report
+    const analysis = await analysisService.generateInsightsReport(deduplicated, priceChanges);
+
+    // Save detected subscriptions
+    const detectedData = await readDetected();
+    detectedData.detected = deduplicated;
+    detectedData.lastScan = new Date().toISOString();
+    detectedData.deepScanAnalysis = analysis;
+    await writeDetected(detectedData);
+
+    console.log(`✅ Deep scan complete! Found ${deduplicated.length} unique subscriptions`);
+    console.log(`💰 Estimated annual cost: ₹${analysis.summary.estimatedAnnualCost}`);
+    console.log(`📊 Price changes detected: ${priceChanges.length}`);
+
+    res.json({
+      detected: deduplicated,
+      count: deduplicated.length,
+      scannedEmails: emails.length,
+      analysis: analysis,
+      priceChanges: priceChanges,
+      lastScan: detectedData.lastScan,
+    });
+  } catch (error) {
+    console.error('Deep scan error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get detected subscriptions
 app.get('/api/gmail/detected', async (req, res) => {
   try {

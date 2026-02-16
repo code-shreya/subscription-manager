@@ -142,4 +142,15 @@ export const api = {
     if (!response.ok) throw new Error('Failed to remove account');
     return response.json();
   },
+
+  // ============ GMAIL DEEP SCAN ============
+
+  // Deep 365-day scan with analysis
+  async deepScanEmails() {
+    const response = await fetch(`${API_BASE_URL}/gmail/deep-scan`, {
+      method: 'POST',
+    });
+    if (!response.ok) throw new Error('Failed to perform deep scan');
+    return response.json();
+  },
 };

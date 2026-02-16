@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Mail, RefreshCw, CheckCircle, XCircle, Sparkles, AlertTriangle, Download, Zap, Check } from 'lucide-react';
+import { Mail, RefreshCw, CheckCircle, XCircle, Sparkles, AlertTriangle, Download, Zap, Check, Search } from 'lucide-react';
+import DeepScanInsights from './DeepScanInsights';
 
 const API_BASE = 'http://localhost:3001/api';
 
@@ -13,10 +14,13 @@ const categoryColors = {
 export default function EmailScanner() {
   const [isConnected, setIsConnected] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [deepScanning, setDeepScanning] = useState(false);
   const [importing, setImporting] = useState(false);
   const [detectedSubs, setDetectedSubs] = useState([]);
   const [selectedSubs, setSelectedSubs] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [showInsights, setShowInsights] = useState(false);
+  const [deepScanResults, setDeepScanResults] = useState(null);
 
   useEffect(() => {
     checkConnection();
@@ -84,6 +88,38 @@ export default function EmailScanner() {
       console.error('Scan failed:', error);
     } finally {
       setScanning(false);
+    }
+  };
+
+  const handleDeepScan = async () => {
+    if (!confirm('🔍 Deep scan will analyze all emails from the past 365 days with advanced insights. This may take 5-10 minutes. Continue?')) {
+      return;
+    }
+
+    setDeepScanning(true);
+    try {
+      const response = await fetch(`${API_BASE}/gmail/deep-scan`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Deep scan failed');
+      }
+
+      const data = await response.json();
+      setDetectedSubs(data.detected || []);
+      setDeepScanResults({
+        analysis: data.analysis,
+        priceChanges: data.priceChanges || [],
+      });
+      setShowInsights(true);
+
+      window.dispatchEvent(new CustomEvent('subscriptions-updated'));
+    } catch (error) {
+      console.error('Deep scan error:', error);
+      alert('❌ Deep scan failed: ' + error.message);
+    } finally {
+      setDeepScanning(false);
     }
   };
 
@@ -199,14 +235,33 @@ export default function EmailScanner() {
                 Connect Gmail
               </button>
             ) : (
-              <button
-                onClick={handleScan}
-                disabled={scanning}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${scanning ? 'animate-spin' : ''}`} />
-                {scanning ? 'Scanning...' : 'Scan Emails'}
-              </button>
+              <>
+                <button
+                  onClick={handleScan}
+                  disabled={scanning || deepScanning}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-4 h-4 ${scanning ? 'animate-spin' : ''}`} />
+                  {scanning ? 'Scanning...' : 'Quick Scan'}
+                </button>
+                <button
+                  onClick={handleDeepScan}
+                  disabled={scanning || deepScanning}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50"
+                >
+                  <Search className={`w-4 h-4 ${deepScanning ? 'animate-pulse' : ''}`} />
+                  {deepScanning ? 'Deep Scanning...' : '365-Day Deep Scan'}
+                </button>
+                {deepScanResults && (
+                  <button
+                    onClick={() => setShowInsights(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    View Insights
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -358,6 +413,15 @@ function CategorySection({ title, icon, count, color, subscriptions, selectedSub
           </div>
         ))}
       </div>
+
+      {/* Deep Scan Insights Modal */}
+      {showInsights && deepScanResults && (
+        <DeepScanInsights
+          analysis={deepScanResults.analysis}
+          priceChanges={deepScanResults.priceChanges}
+          onClose={() => setShowInsights(false)}
+        />
+      )}
     </div>
   );
 }
