@@ -132,7 +132,7 @@ export default function EmailScanner() {
   };
 
   const handleDeepScan = async () => {
-    if (!confirm('🔍 Deep scan will analyze all emails from the past 365 days with advanced insights. This may take 5-10 minutes. Continue?')) {
+    if (!confirm('🔍 Deep scan will analyze up to 200 emails from the past 365 days with advanced insights. This takes about 1 minute. Continue?')) {
       return;
     }
 
@@ -358,7 +358,7 @@ export default function EmailScanner() {
           </div>
 
           <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
-            <span>{deepScanning ? 'Deep scanning may take 5-10 minutes' : 'Analyzing emails...'}</span>
+            <span>{deepScanning ? 'Deep scanning ~1 minute (200 emails)' : 'Analyzing emails...'}</span>
             <span>{Math.round(scanProgress.current)}/{scanProgress.total} emails</span>
           </div>
         </div>

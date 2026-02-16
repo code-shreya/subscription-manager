@@ -186,9 +186,9 @@ class GmailService {
         if (pageToken) {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
-      } while (pageToken && allMessages.length < 1000); // Safety limit
+      } while (pageToken && allMessages.length < 200); // Limit to 200 for faster processing
 
-      console.log(`📬 Total emails found across ${daysBack} days: ${allMessages.length}`);
+      console.log(`📬 Total emails found (limited to 200): ${allMessages.length}`);
       return allMessages;
     } catch (error) {
       console.error('Error in deep scan:', error.message);
