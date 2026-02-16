@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Mail, RefreshCw, CheckCircle, XCircle, Sparkles, AlertTriangle, Download, Zap, Check, Search } from 'lucide-react';
+import { Mail, RefreshCw, CheckCircle, XCircle, Sparkles, AlertTriangle, Download, Search, Check } from 'lucide-react';
 import DeepScanInsights from './DeepScanInsights';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const categoryColors = {
-  confirmed_subscription: { bg: 'bg-emerald-500', border: 'border-emerald-300', text: 'text-emerald-700', gradient: 'from-emerald-500 to-teal-600' },
-  one_time_payment: { bg: 'bg-blue-500', border: 'border-blue-300', text: 'text-blue-700', gradient: 'from-blue-500 to-cyan-600' },
-  failed_payment: { bg: 'bg-rose-500', border: 'border-rose-300', text: 'text-rose-700', gradient: 'from-rose-500 to-pink-600' },
-  other: { bg: 'bg-gray-500', border: 'border-gray-300', text: 'text-gray-700', gradient: 'from-gray-500 to-slate-600' },
+  confirmed_subscription: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', badge: 'bg-green-100' },
+  one_time_payment: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-100' },
+  failed_payment: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'bg-red-100' },
+  other: { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700', badge: 'bg-gray-100' },
 };
 
 export default function EmailScanner() {
@@ -34,7 +34,7 @@ export default function EmailScanner() {
         throw new Error(`HTTP ${response.status}`);
       }
       const data = await response.json();
-      setIsConnected(!!data.connected); // Convert to boolean
+      setIsConnected(!!data.connected);
     } catch (error) {
       console.error('Failed to check connection:', error);
       setIsConnected(false);
@@ -100,7 +100,7 @@ export default function EmailScanner() {
   };
 
   const handleDeepScan = async () => {
-    if (!confirm('🔍 Deep scan will analyze all emails from the past 365 days with advanced insights. This may take 5-10 minutes. Continue?')) {
+    if (!confirm('Deep scan will analyze all emails from the past 365 days with advanced insights. This may take 5-10 minutes. Continue?')) {
       return;
     }
 
@@ -125,7 +125,7 @@ export default function EmailScanner() {
       window.dispatchEvent(new CustomEvent('subscriptions-updated'));
     } catch (error) {
       console.error('Deep scan error:', error);
-      alert('❌ Deep scan failed: ' + error.message);
+      alert('Deep scan failed: ' + error.message);
     } finally {
       setDeepScanning(false);
     }
@@ -192,52 +192,52 @@ export default function EmailScanner() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0969da]"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Email Scanner</h1>
-        <p className="text-sm text-gray-500 mt-1">Scan your inbox for subscription emails</p>
+      <div className="pb-4 border-b border-[#d0d7de]">
+        <h1 className="text-2xl font-semibold text-[#24292f]">Email Scanner</h1>
+        <p className="text-sm text-gray-600 mt-1">Scan your inbox for subscription emails</p>
       </div>
 
       {/* Connection Card */}
-      <div className={`rounded-2xl border-2 p-6 ${
+      <div className={`border rounded-md p-4 ${
         isConnected
-          ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-300'
-          : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-300'
+          ? 'bg-green-50 border-green-200'
+          : 'bg-[#f6f8fa] border-[#d0d7de]'
       }`}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
-              isConnected ? 'from-emerald-500 to-teal-600' : 'from-purple-600 to-pink-600'
-            } flex items-center justify-center shadow-lg`}>
-              <Mail className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-md flex items-center justify-center ${
+              isConnected ? 'bg-green-600' : 'bg-gray-600'
+            }`}>
+              <Mail className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">Gmail Connection</h3>
+                <h3 className="font-semibold text-[#24292f]">Gmail Connection</h3>
                 {isConnected && (
-                  <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded-full">
+                  <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 border border-green-200 rounded-md">
                     <CheckCircle className="w-3 h-3 mr-1" />
                     Connected
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-600 mt-0.5">
                 {isConnected ? 'Ready to scan your emails' : 'Connect your Gmail to get started'}
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             {!isConnected ? (
               <button
                 onClick={handleConnect}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#2da44e] text-white text-sm font-medium rounded-md hover:bg-[#2c974b] transition-colors"
               >
                 <Mail className="w-4 h-4" />
                 Connect Gmail
@@ -247,7 +247,7 @@ export default function EmailScanner() {
                 <button
                   onClick={handleScan}
                   disabled={scanning || deepScanning}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#2da44e] text-white text-sm font-medium rounded-md hover:bg-[#2c974b] transition-colors disabled:opacity-50"
                 >
                   <RefreshCw className={`w-4 h-4 ${scanning ? 'animate-spin' : ''}`} />
                   {scanning ? 'Scanning...' : 'Quick Scan'}
@@ -255,7 +255,7 @@ export default function EmailScanner() {
                 <button
                   onClick={handleDeepScan}
                   disabled={scanning || deepScanning}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#0969da] text-white text-sm font-medium rounded-md hover:bg-[#0860ca] transition-colors disabled:opacity-50"
                 >
                   <Search className={`w-4 h-4 ${deepScanning ? 'animate-pulse' : ''}`} />
                   {deepScanning ? 'Deep Scanning...' : '365-Day Deep Scan'}
@@ -263,7 +263,7 @@ export default function EmailScanner() {
                 {deepScanResults && (
                   <button
                     onClick={() => setShowInsights(true)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
                   >
                     <Sparkles className="w-4 h-4" />
                     View Insights
@@ -277,13 +277,13 @@ export default function EmailScanner() {
 
       {/* Bulk Actions */}
       {selectedSubs.size > 0 && (
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-4 shadow-lg">
+        <div className="bg-[#0969da] rounded-md p-4">
           <div className="flex items-center justify-between text-white">
             <span className="font-semibold">{selectedSubs.size} selected</span>
             <button
               onClick={handleBulkImport}
               disabled={importing}
-              className="px-4 py-2 bg-white text-purple-600 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+              className="px-4 py-2 bg-white text-[#0969da] font-medium rounded-md hover:bg-gray-100 transition-colors"
             >
               {importing ? 'Importing...' : 'Import Selected'}
             </button>
@@ -292,14 +292,14 @@ export default function EmailScanner() {
       )}
 
       {/* Categories */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Confirmed Subscriptions */}
         {categorizedSubs.confirmed.length > 0 && (
           <CategorySection
             title="Confirmed Subscriptions"
             icon={<Sparkles className="w-5 h-5" />}
             count={categorizedSubs.confirmed.length}
-            color="emerald"
+            color="green"
             subscriptions={categorizedSubs.confirmed}
             selectedSubs={selectedSubs}
             onToggleSelect={toggleSelect}
@@ -341,86 +341,16 @@ export default function EmailScanner() {
 
       {/* Empty State */}
       {detectedSubs.length === 0 && !scanning && (
-        <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Mail className="w-8 h-8 text-purple-600" />
+        <div className="bg-white border border-[#d0d7de] rounded-md p-12 text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center mx-auto mb-4">
+            <Mail className="w-8 h-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No emails scanned yet</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            {isConnected ? 'Click "Scan Emails" to find subscriptions' : 'Connect Gmail to get started'}
+          <h3 className="text-base font-semibold text-[#24292f] mb-2">No emails scanned yet</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            {isConnected ? 'Click "Quick Scan" to find subscriptions' : 'Connect Gmail to get started'}
           </p>
         </div>
       )}
-    </div>
-  );
-}
-
-function CategorySection({ title, icon, count, color, subscriptions, selectedSubs, onToggleSelect, onImport, importing }) {
-  const colors = {
-    emerald: { bg: 'from-emerald-500 to-teal-600', border: 'border-emerald-300', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700' },
-    blue: { bg: 'from-blue-500 to-cyan-600', border: 'border-blue-300', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700' },
-    gray: { bg: 'from-gray-500 to-slate-600', border: 'border-gray-300', badgeBg: 'bg-gray-100', badgeText: 'text-gray-700' },
-  };
-
-  const colorScheme = colors[color];
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-      <div className={`bg-gradient-to-r ${colorScheme.bg} px-6 py-4`}>
-        <div className="flex items-center justify-between text-white">
-          <div className="flex items-center gap-3">
-            {icon}
-            <h3 className="font-semibold text-lg">{title}</h3>
-          </div>
-          <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold">
-            {count}
-          </span>
-        </div>
-      </div>
-
-      <div className="p-6 space-y-4">
-        {subscriptions.map((sub) => (
-          <div
-            key={sub.emailId}
-            className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 transition-all"
-          >
-            <input
-              type="checkbox"
-              checked={selectedSubs.has(sub.emailId)}
-              onChange={() => onToggleSelect(sub.emailId)}
-              className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 mt-0.5"
-            />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <div>
-                  <h4 className="font-semibold text-gray-900">{sub.serviceName}</h4>
-                  <p className="text-sm text-gray-500 mt-1">{sub.description}</p>
-                </div>
-                {sub.amount && (
-                  <div className="text-right flex-shrink-0">
-                    <div className="font-bold text-gray-900">₹{sub.amount}</div>
-                    <div className="text-xs text-gray-500">{sub.billingCycle}</div>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-3 text-xs text-gray-500">
-                <span className={`px-2 py-1 ${colorScheme.badgeBg} ${colorScheme.badgeText} rounded font-medium`}>
-                  {sub.confidence}% confidence
-                </span>
-                <span>{sub.category}</span>
-              </div>
-            </div>
-            <button
-              onClick={() => onImport(sub)}
-              disabled={importing}
-              className="flex-shrink-0 p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50"
-              title="Import"
-            >
-              <Check className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
-      </div>
 
       {/* Deep Scan Insights Modal */}
       {showInsights && deepScanResults && (
@@ -430,6 +360,76 @@ function CategorySection({ title, icon, count, color, subscriptions, selectedSub
           onClose={() => setShowInsights(false)}
         />
       )}
+    </div>
+  );
+}
+
+function CategorySection({ title, icon, count, color, subscriptions, selectedSubs, onToggleSelect, onImport, importing }) {
+  const colors = {
+    green: { bg: 'bg-[#2da44e]', badge: 'bg-green-100 text-green-700 border-green-200' },
+    blue: { bg: 'bg-[#0969da]', badge: 'bg-blue-100 text-blue-700 border-blue-200' },
+    gray: { bg: 'bg-gray-600', badge: 'bg-gray-100 text-gray-700 border-gray-200' },
+  };
+
+  const colorScheme = colors[color];
+
+  return (
+    <div className="bg-white border border-[#d0d7de] rounded-md overflow-hidden">
+      <div className={`${colorScheme.bg} px-6 py-3`}>
+        <div className="flex items-center justify-between text-white">
+          <div className="flex items-center gap-2">
+            {icon}
+            <h3 className="font-semibold text-base">{title}</h3>
+          </div>
+          <span className="px-2.5 py-0.5 bg-white/20 rounded-md text-sm font-semibold">
+            {count}
+          </span>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-3">
+        {subscriptions.map((sub) => (
+          <div
+            key={sub.emailId}
+            className="flex items-start gap-3 p-3 bg-[#f6f8fa] border border-[#d0d7de] rounded-md hover:bg-gray-50 transition-colors"
+          >
+            <input
+              type="checkbox"
+              checked={selectedSubs.has(sub.emailId)}
+              onChange={() => onToggleSelect(sub.emailId)}
+              className="w-4 h-4 rounded border-gray-300 text-[#0969da] focus:ring-[#0969da] mt-0.5"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-4 mb-2">
+                <div>
+                  <h4 className="font-semibold text-[#24292f]">{sub.serviceName}</h4>
+                  <p className="text-sm text-gray-600 mt-1">{sub.description}</p>
+                </div>
+                {sub.amount && (
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-semibold text-[#24292f]">₹{sub.amount}</div>
+                    <div className="text-xs text-gray-600">{sub.billingCycle}</div>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-3 text-xs text-gray-600">
+                <span className={`px-2 py-0.5 rounded-md border font-medium ${colorScheme.badge}`}>
+                  {sub.confidence}% confidence
+                </span>
+                <span>{sub.category}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => onImport(sub)}
+              disabled={importing}
+              className="flex-shrink-0 p-2 bg-[#2da44e] text-white rounded-md hover:bg-[#2c974b] transition-colors disabled:opacity-50"
+              title="Import"
+            >
+              <Check className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
