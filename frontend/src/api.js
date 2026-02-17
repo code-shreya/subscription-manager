@@ -1,156 +1,223 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const TOKEN_KEYS = {
+  access: 'submanager_access_token',
+  refresh: 'submanager_refresh_token',
+};
+
+async function fetchWithAuth(url, options = {}) {
+  const accessToken = localStorage.getItem(TOKEN_KEYS.access);
+
+  const headers = {
+    ...options.headers,
+  };
+
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  if (options.body && typeof options.body === 'string') {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
+
+  let response = await fetch(url, { ...options, headers });
+
+  // If 401, try refreshing the token
+  if (response.status === 401) {
+    const refreshToken = localStorage.getItem(TOKEN_KEYS.refresh);
+    if (refreshToken) {
+      const refreshRes = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (refreshRes.ok) {
+        const tokens = await refreshRes.json();
+        localStorage.setItem(TOKEN_KEYS.access, tokens.accessToken);
+        localStorage.setItem(TOKEN_KEYS.refresh, tokens.refreshToken);
+
+        headers['Authorization'] = `Bearer ${tokens.accessToken}`;
+        response = await fetch(url, { ...options, headers });
+      } else {
+        // Refresh failed — force logout
+        localStorage.removeItem(TOKEN_KEYS.access);
+        localStorage.removeItem(TOKEN_KEYS.refresh);
+        window.dispatchEvent(new CustomEvent('auth-expired'));
+        throw new Error('Session expired. Please log in again.');
+      }
+    }
+  }
+
+  return response;
+}
+
+async function request(url, options = {}) {
+  const response = await fetchWithAuth(url, options);
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const err = new Error(body.message || `Request failed (${response.status})`);
+    err.status = response.status;
+    throw err;
+  }
+  return response.json();
+}
 
 export const api = {
-  // Get all subscriptions
+  // ============ SUBSCRIPTIONS ============
+
   async getSubscriptions() {
-    const response = await fetch(`${API_BASE_URL}/subscriptions`);
-    if (!response.ok) throw new Error('Failed to fetch subscriptions');
-    return response.json();
+    return request('/api/subscriptions');
   },
 
-  // Get single subscription
   async getSubscription(id) {
-    const response = await fetch(`${API_BASE_URL}/subscriptions/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch subscription');
-    return response.json();
+    return request(`/api/subscriptions/${id}`);
   },
 
-  // Create subscription
   async createSubscription(data) {
-    const response = await fetch(`${API_BASE_URL}/subscriptions`, {
+    const payload = {
+      ...data,
+      amount: typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount,
+    };
+    // Ensure ISO date format
+    if (payload.next_billing_date && !payload.next_billing_date.includes('T')) {
+      payload.next_billing_date = `${payload.next_billing_date}T00:00:00.000Z`;
+    }
+    return request('/api/subscriptions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
-    if (!response.ok) throw new Error('Failed to create subscription');
-    return response.json();
   },
 
-  // Update subscription
   async updateSubscription(id, data) {
-    const response = await fetch(`${API_BASE_URL}/subscriptions/${id}`, {
+    const payload = {
+      ...data,
+      amount: typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount,
+    };
+    if (payload.next_billing_date && !payload.next_billing_date.includes('T')) {
+      payload.next_billing_date = `${payload.next_billing_date}T00:00:00.000Z`;
+    }
+    return request(`/api/subscriptions/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async deleteSubscription(id) {
+    return request(`/api/subscriptions/${id}`, { method: 'DELETE' });
+  },
+
+  // ============ ANALYTICS ============
+
+  async getAnalytics() {
+    return request('/api/analytics/overview');
+  },
+
+  // ============ BANK INTEGRATION ============
+
+  async getSupportedBanks() {
+    return request('/api/banks/supported');
+  },
+
+  async getBankConnections() {
+    return request('/api/banks/connections');
+  },
+
+  async connectBank(bankId) {
+    return request('/api/banks/connect', {
+      method: 'POST',
+      body: JSON.stringify({ bankId }),
+    });
+  },
+
+  async syncBankConnection(connectionId) {
+    return request(`/api/banks/connections/${connectionId}/sync`, {
+      method: 'POST',
+    });
+  },
+
+  async disconnectBank(connectionId) {
+    return request(`/api/banks/connections/${connectionId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async getBankRecurring(connectionId) {
+    return request(`/api/banks/connections/${connectionId}/recurring`);
+  },
+
+  // ============ DETECTION ============
+
+  async getDetectionResults(status) {
+    const query = status ? `?status=${status}` : '';
+    return request(`/api/detection/results${query}`);
+  },
+
+  async importDetection(id) {
+    return request(`/api/detection/${id}/import`, { method: 'POST' });
+  },
+
+  async rejectDetection(id) {
+    return request(`/api/detection/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'rejected' }),
+    });
+  },
+
+  // ============ EMAIL / GMAIL ============
+
+  async getEmailConnections() {
+    return request('/api/email/connections');
+  },
+
+  async getGmailAuthUrl() {
+    return request('/api/email/gmail/auth-url');
+  },
+
+  async handleGmailCallback(code) {
+    return request('/api/email/gmail/callback', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  },
+
+  async scanEmails(connectionId, options = {}) {
+    return request(`/api/email/connections/${connectionId}/scan`, {
+      method: 'POST',
+      body: JSON.stringify(options),
+    });
+  },
+
+  async startEmailDetectionScan() {
+    return request('/api/detection/scan/email', { method: 'POST' });
+  },
+
+  async getEmailScanJob(jobId) {
+    return request(`/api/detection/jobs/email-scan/${jobId}`);
+  },
+
+  // ============ NOTIFICATIONS ============
+
+  async getNotifications(limit = 20) {
+    return request(`/api/notifications?limit=${limit}`);
+  },
+
+  async markNotificationRead(id) {
+    return request(`/api/notifications/${id}/read`, { method: 'PATCH' });
+  },
+
+  async markAllNotificationsRead() {
+    return request('/api/notifications/read-all', { method: 'PATCH' });
+  },
+
+  // ============ PROFILE ============
+
+  async getProfile() {
+    return request('/api/auth/me');
+  },
+
+  async updateProfile(data) {
+    return request('/api/auth/me', {
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Failed to update subscription');
-    return response.json();
-  },
-
-  // Delete subscription
-  async deleteSubscription(id) {
-    const response = await fetch(`${API_BASE_URL}/subscriptions/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete subscription');
-    return response.json();
-  },
-
-  // Get analytics
-  async getAnalytics() {
-    const response = await fetch(`${API_BASE_URL}/analytics`);
-    if (!response.ok) throw new Error('Failed to fetch analytics');
-    return response.json();
-  },
-
-  // ============ PLAID / BANK INTEGRATION ============
-
-  // Check if Plaid is configured
-  async getPlaidStatus() {
-    const response = await fetch(`${API_BASE_URL}/plaid/status`);
-    if (!response.ok) throw new Error('Failed to check Plaid status');
-    return response.json();
-  },
-
-  // Create link token
-  async createLinkToken() {
-    const response = await fetch(`${API_BASE_URL}/plaid/create-link-token`, {
-      method: 'POST',
-    });
-    if (!response.ok) throw new Error('Failed to create link token');
-    return response.json();
-  },
-
-  // Exchange public token (mock mode: pass bankId)
-  async exchangePublicToken(publicToken, metadata) {
-    const response = await fetch(`${API_BASE_URL}/plaid/exchange-token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        public_token: publicToken,
-        metadata,
-        bankId: metadata?.bankId // For mock Indian banks
-      }),
-    });
-    if (!response.ok) throw new Error('Failed to exchange token');
-    return response.json();
-  },
-
-  // Get connected accounts
-  async getConnectedAccounts() {
-    const response = await fetch(`${API_BASE_URL}/plaid/accounts`);
-    if (!response.ok) throw new Error('Failed to fetch connected accounts');
-    return response.json();
-  },
-
-  // Sync transactions
-  async syncAccount(accountId) {
-    const response = await fetch(`${API_BASE_URL}/plaid/sync/${accountId}`, {
-      method: 'POST',
-    });
-    if (!response.ok) throw new Error('Failed to sync account');
-    return response.json();
-  },
-
-  // Get transactions
-  async getTransactions() {
-    const response = await fetch(`${API_BASE_URL}/plaid/transactions`);
-    if (!response.ok) throw new Error('Failed to fetch transactions');
-    return response.json();
-  },
-
-  // Get detected subscriptions from bank
-  async getDetectedFromBank() {
-    const response = await fetch(`${API_BASE_URL}/plaid/detected-subscriptions`);
-    if (!response.ok) throw new Error('Failed to fetch detected subscriptions');
-    return response.json();
-  },
-
-  // Import detected subscription
-  async importFromBank(detectedId) {
-    const response = await fetch(`${API_BASE_URL}/plaid/import/${detectedId}`, {
-      method: 'POST',
-    });
-    if (!response.ok) throw new Error('Failed to import subscription');
-    return response.json();
-  },
-
-  // Dismiss detected subscription
-  async dismissDetectedBank(detectedId) {
-    const response = await fetch(`${API_BASE_URL}/plaid/detected/${detectedId}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to dismiss detected subscription');
-    return response.json();
-  },
-
-  // Remove connected account
-  async removeConnectedAccount(accountId) {
-    const response = await fetch(`${API_BASE_URL}/plaid/accounts/${accountId}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to remove account');
-    return response.json();
-  },
-
-  // ============ GMAIL DEEP SCAN ============
-
-  // Deep 365-day scan with analysis
-  async deepScanEmails() {
-    const response = await fetch(`${API_BASE_URL}/gmail/deep-scan`, {
-      method: 'POST',
-    });
-    if (!response.ok) throw new Error('Failed to perform deep scan');
-    return response.json();
   },
 };

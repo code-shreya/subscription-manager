@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { api } from '../api';
 import { Bell, X, Check } from 'lucide-react';
 
 export default function NotificationBell() {
@@ -31,9 +32,9 @@ export default function NotificationBell() {
 
   const loadNotifications = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/notifications/in-app');
-      const data = await response.json();
-      setNotifications(data);
+      const data = await api.getNotifications();
+      const items = data.notifications || data || [];
+      setNotifications(items);
     } catch (error) {
       console.error('Failed to load notifications:', error);
     }
@@ -41,7 +42,7 @@ export default function NotificationBell() {
 
   const markAsRead = async (id) => {
     try {
-      await fetch(`http://localhost:3001/api/notifications/${id}/read`, { method: 'PUT' });
+      await api.markNotificationRead(id);
       await loadNotifications();
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
@@ -50,16 +51,17 @@ export default function NotificationBell() {
 
   const markAllAsRead = async () => {
     try {
-      await fetch('http://localhost:3001/api/notifications/read-all', { method: 'PUT' });
+      await api.markAllNotificationsRead();
       await loadNotifications();
     } catch (error) {
       console.error('Failed to mark all as read:', error);
     }
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !(n.is_read ?? n.read)).length;
 
   const getNotificationIcon = (type) => {
+    const notifType = type || '';
     const icons = {
       renewal_reminder: '⏰',
       new_subscription: '✨',
@@ -67,7 +69,7 @@ export default function NotificationBell() {
       scan_completed: '📧',
       auto_imported: '🤖',
     };
-    return icons[type] || '🔔';
+    return icons[notifType] || '🔔';
   };
 
   const formatTime = (timestamp) => {
@@ -130,53 +132,62 @@ export default function NotificationBell() {
               </div>
             ) : (
               <div>
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors ${
-                      !notification.read ? 'bg-purple-50' : ''
-                    }`}
-                  >
-                    <div className="flex gap-3">
-                      <div className="text-lg">{getNotificationIcon(notification.type)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                            <p className="text-sm text-gray-600 mt-0.5">{notification.message}</p>
-                            {notification.subscription && (
-                              <div className="mt-1 flex items-center gap-2">
-                                <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded font-medium">
-                                  {notification.subscription.name}
-                                </span>
-                                {notification.subscription.amount && (
-                                  <span className="text-xs font-semibold text-gray-600">
-                                    ₹{notification.subscription.amount}
-                                  </span>
-                                )}
-                              </div>
+                {notifications.map((notification) => {
+                  const isRead = notification.is_read ?? notification.read;
+                  const notifType = notification.notification_type || notification.type;
+                  const createdAt = notification.created_at || notification.createdAt;
+                  const meta = notification.metadata || {};
+
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors ${
+                        !isRead ? 'bg-purple-50' : ''
+                      }`}
+                    >
+                      <div className="flex gap-3">
+                        <div className="text-lg">{getNotificationIcon(notifType)}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                              <p className="text-sm text-gray-600 mt-0.5">{notification.message}</p>
+                              {(meta.subscriptionName || meta.amount) && (
+                                <div className="mt-1 flex items-center gap-2">
+                                  {meta.subscriptionName && (
+                                    <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded font-medium">
+                                      {meta.subscriptionName}
+                                    </span>
+                                  )}
+                                  {meta.amount && (
+                                    <span className="text-xs font-semibold text-gray-600">
+                                      ₹{meta.amount}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            {!isRead && (
+                              <button
+                                onClick={() => markAsRead(notification.id)}
+                                className="p-1 hover:bg-white rounded transition-colors flex-shrink-0"
+                                title="Mark as read"
+                              >
+                                <Check className="w-4 h-4 text-purple-600" />
+                              </button>
                             )}
                           </div>
-                          {!notification.read && (
-                            <button
-                              onClick={() => markAsRead(notification.id)}
-                              className="p-1 hover:bg-white rounded transition-colors flex-shrink-0"
-                              title="Mark as read"
-                            >
-                              <Check className="w-4 h-4 text-purple-600" />
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-xs text-gray-500">{formatTime(notification.createdAt)}</span>
-                          {notification.read && (
-                            <span className="text-xs text-gray-400">Read</span>
-                          )}
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-gray-500">{formatTime(createdAt)}</span>
+                            {isRead && (
+                              <span className="text-xs text-gray-400">Read</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

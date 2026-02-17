@@ -1,125 +1,71 @@
 import { useEffect, useState } from 'react';
-import { Settings as SettingsIcon, Zap, Mail, Bell, Save, Send, Clock } from 'lucide-react';
+import { api } from '../api';
+import { useAuth } from '../contexts/AuthContext';
+import { Settings as SettingsIcon, User, Building2, Mail, Sliders, Save } from 'lucide-react';
 
 const TABS = [
-  { id: 'automation', label: 'Automation', icon: Zap },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'advanced', label: 'Advanced', icon: SettingsIcon },
+  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'connections', label: 'Connected Accounts', icon: Building2 },
+  { id: 'preferences', label: 'Preferences', icon: Sliders },
 ];
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('automation');
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Scheduler Config
-  const [config, setConfig] = useState(null);
-  const [activeJobs, setActiveJobs] = useState([]);
+  // Profile
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
 
-  // Email Config
-  const [emailConfig, setEmailConfig] = useState(null);
-  const [testingEmail, setTestingEmail] = useState(false);
+  // Connections summary
+  const [bankConnections, setBankConnections] = useState([]);
+  const [emailConnections, setEmailConnections] = useState([]);
 
   useEffect(() => {
-    loadSettings();
-    loadEmailConfig();
+    loadProfile();
+    loadConnections();
   }, []);
 
-  const loadSettings = async () => {
+  const loadProfile = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/scheduler/status');
-      const data = await response.json();
-      setConfig(data.config);
-      setActiveJobs(data.activeJobs);
+      const data = await api.getProfile();
+      const u = data.user || data;
+      setProfileName(u.name || '');
+      setProfileEmail(u.email || '');
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      // Fallback to auth context
+      setProfileName(user?.name || '');
+      setProfileEmail(user?.email || '');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadEmailConfig = async () => {
+  const loadConnections = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/notifications/email-config');
-      const data = await response.json();
-      setEmailConfig(data);
+      const [bankData, emailData] = await Promise.all([
+        api.getBankConnections().catch(() => ({ connections: [] })),
+        api.getEmailConnections().catch(() => ({ connections: [] })),
+      ]);
+      setBankConnections(bankData.connections || bankData || []);
+      setEmailConnections(emailData.connections || emailData || []);
     } catch (error) {
-      console.error('Failed to load email config:', error);
+      console.error('Failed to load connections:', error);
     }
   };
 
-  const handleSave = async () => {
+  const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      const response = await fetch('http://localhost:3001/api/scheduler/config', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
-      });
-
-      if (response.ok) {
-        alert('Settings saved!');
-        await loadSettings();
-      }
+      await api.updateProfile({ name: profileName });
+      alert('Profile updated!');
     } catch (error) {
-      console.error('Failed to save settings:', error);
-      alert('Failed to save settings');
+      console.error('Failed to update profile:', error);
+      alert('Failed to update profile');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const saveEmailConfig = async () => {
-    setSaving(true);
-    try {
-      const response = await fetch('http://localhost:3001/api/notifications/email-config', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(emailConfig),
-      });
-
-      if (response.ok) {
-        alert('Email settings saved!');
-        await loadEmailConfig();
-      }
-    } catch (error) {
-      console.error('Failed to save email settings:', error);
-      alert('Failed to save');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const testEmail = async () => {
-    setTestingEmail(true);
-    try {
-      const response = await fetch('http://localhost:3001/api/notifications/test-email', {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        alert('Test email sent! Check your inbox.');
-      }
-    } catch (error) {
-      alert('Failed to send test email');
-    } finally {
-      setTestingEmail(false);
-    }
-  };
-
-  const updateConfig = (key, value) => {
-    setConfig({ ...config, [key]: value });
-  };
-
-  const updateEmailConfig = (key, value) => {
-    if (key.includes('.')) {
-      const [parent, child] = key.split('.');
-      setEmailConfig({
-        ...emailConfig,
-        [parent]: { ...emailConfig[parent], [child]: value },
-      });
-    } else {
-      setEmailConfig({ ...emailConfig, [key]: value });
     }
   };
 
@@ -164,226 +110,111 @@ export default function Settings() {
         </div>
 
         <div className="p-6">
-          {/* Automation Tab */}
-          {activeTab === 'automation' && (
-            <div className="space-y-6">
-              {/* Status */}
-              <div className="bg-[#f6f8fa] border border-[#d0d7de] rounded-md p-4">
-                <h3 className="font-semibold text-[#24292f] mb-4">System Status</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white border border-[#d0d7de] rounded-md p-4">
-                    <div className="text-sm text-gray-600 mb-1">Active Jobs</div>
-                    <div className="text-2xl font-semibold text-[#24292f]">{activeJobs.length}</div>
-                  </div>
-                  <div className="bg-white border border-[#d0d7de] rounded-md p-4">
-                    <div className="text-sm text-gray-600 mb-1">Last Scan</div>
-                    <div className="text-sm font-medium text-[#24292f]">
-                      {config.lastScanTime ? new Date(config.lastScanTime).toLocaleString() : 'Never'}
-                    </div>
-                  </div>
-                </div>
+          {/* Profile Tab */}
+          {activeTab === 'profile' && (
+            <div className="space-y-6 max-w-lg">
+              <div>
+                <label className="block text-sm font-semibold text-[#24292f] mb-2">Email</label>
+                <input
+                  type="email"
+                  value={profileEmail}
+                  disabled
+                  className="w-full px-3 py-2 bg-[#f6f8fa] border border-[#d0d7de] rounded-md text-sm text-gray-500 cursor-not-allowed"
+                />
+                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
               </div>
 
-              {/* Auto Scan */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-[#f6f8fa] border border-[#d0d7de] rounded-md">
-                  <div>
-                    <div className="font-semibold text-[#24292f]">Auto-Scan Emails</div>
-                    <div className="text-sm text-gray-600">Automatically scan for subscriptions</div>
-                  </div>
-                  <Toggle
-                    checked={config.autoScanEnabled}
-                    onChange={(checked) => updateConfig('autoScanEnabled', checked)}
-                  />
-                </div>
-
-                {config.autoScanEnabled && (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-[#24292f] mb-2">
-                          Scan Schedule
-                        </label>
-                        <select
-                          value={config.scanSchedule}
-                          onChange={(e) => updateConfig('scanSchedule', e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-[#d0d7de] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-[#0969da]"
-                        >
-                          <option value="0 8 * * *">Daily at 8:00 AM</option>
-                          <option value="0 0 * * *">Daily at Midnight</option>
-                          <option value="0 */12 * * *">Every 12 hours</option>
-                          <option value="0 9 * * 1">Every Monday at 9:00 AM</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-[#24292f] mb-2">
-                          Days to Scan
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="365"
-                          value={config.scanDaysBack}
-                          onChange={(e) => updateConfig('scanDaysBack', parseInt(e.target.value))}
-                          className="w-full px-3 py-2 bg-white border border-[#d0d7de] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-[#0969da]"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Auto Import */}
-              <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-md">
-                <div>
-                  <div className="font-semibold text-[#24292f]">Auto-Import Confirmed</div>
-                  <div className="text-sm text-gray-600">Import high-confidence subscriptions (≥85%)</div>
-                </div>
-                <Toggle
-                  checked={config.autoImportConfirmed}
-                  onChange={(checked) => updateConfig('autoImportConfirmed', checked)}
+              <div>
+                <label className="block text-sm font-semibold text-[#24292f] mb-2">Display Name</label>
+                <input
+                  type="text"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  placeholder="Your name"
+                  className="w-full px-3 py-2 bg-white border border-[#d0d7de] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-[#0969da]"
                 />
               </div>
 
               <button
-                onClick={handleSave}
+                onClick={handleSaveProfile}
                 disabled={saving}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#2da44e] text-white font-medium rounded-md hover:bg-[#2c974b] transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#2da44e] text-white text-sm font-medium rounded-md hover:bg-[#2c974b] transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {saving ? 'Saving...' : 'Save Automation Settings'}
+                {saving ? 'Saving...' : 'Update Profile'}
               </button>
             </div>
           )}
 
-          {/* Notifications Tab */}
-          {activeTab === 'notifications' && emailConfig && (
+          {/* Connected Accounts Tab */}
+          {activeTab === 'connections' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-[#fff8c5] border border-[#d4a72c] rounded-md">
-                <div>
-                  <div className="font-semibold text-[#24292f]">Email Reminders</div>
-                  <div className="text-sm text-gray-600">Get notified before renewals</div>
-                </div>
-                <Toggle
-                  checked={emailConfig.enabled}
-                  onChange={(checked) => updateEmailConfig('enabled', checked)}
-                />
+              {/* Bank Connections */}
+              <div>
+                <h3 className="text-base font-semibold text-[#24292f] mb-3 flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-gray-600" />
+                  Bank Accounts
+                </h3>
+                {bankConnections.length > 0 ? (
+                  <div className="space-y-2">
+                    {bankConnections.map((conn) => (
+                      <div key={conn.id} className="flex items-center justify-between p-3 bg-[#f6f8fa] border border-[#d0d7de] rounded-md">
+                        <div>
+                          <span className="font-medium text-[#24292f]">{conn.bankName || conn.institutionName}</span>
+                          {conn.accountIdentifier && (
+                            <span className="ml-2 text-sm text-gray-500">{conn.accountIdentifier}</span>
+                          )}
+                        </div>
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 border border-green-200 text-xs font-semibold rounded-md">
+                          Connected
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 py-4">No bank accounts connected. Visit the Accounts tab to connect one.</p>
+                )}
               </div>
 
-              {emailConfig.enabled && (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-[#24292f] mb-2">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        value={emailConfig.auth.user}
-                        onChange={(e) => updateEmailConfig('auth.user', e.target.value)}
-                        placeholder="your-email@gmail.com"
-                        className="w-full px-3 py-2 bg-white border border-[#d0d7de] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-[#0969da]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-[#24292f] mb-2">
-                        App Password
-                      </label>
-                      <input
-                        type="password"
-                        value={emailConfig.auth.pass === '••••••••' ? '' : emailConfig.auth.pass}
-                        onChange={(e) => updateEmailConfig('auth.pass', e.target.value)}
-                        placeholder="16-character app password"
-                        className="w-full px-3 py-2 bg-white border border-[#d0d7de] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0969da] focus:border-[#0969da]"
-                      />
-                    </div>
+              {/* Email Connections */}
+              <div>
+                <h3 className="text-base font-semibold text-[#24292f] mb-3 flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-gray-600" />
+                  Email Accounts
+                </h3>
+                {emailConnections.length > 0 ? (
+                  <div className="space-y-2">
+                    {emailConnections.map((conn) => (
+                      <div key={conn.id} className="flex items-center justify-between p-3 bg-[#f6f8fa] border border-[#d0d7de] rounded-md">
+                        <div>
+                          <span className="font-medium text-[#24292f] capitalize">{conn.provider || 'Gmail'}</span>
+                          {conn.email && <span className="ml-2 text-sm text-gray-500">{conn.email}</span>}
+                        </div>
+                        <span className={`px-2 py-0.5 text-xs font-semibold rounded-md border ${
+                          conn.status === 'active'
+                            ? 'bg-green-100 text-green-700 border-green-200'
+                            : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                        }`}>
+                          {conn.status === 'active' ? 'Connected' : conn.status}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-[#24292f] mb-3">
-                      Reminder Days
-                    </label>
-                    <div className="flex flex-wrap gap-3">
-                      {[1, 3, 7, 14].map((day) => (
-                        <label
-                          key={day}
-                          className="flex items-center gap-2 px-4 py-2 bg-white border border-[#d0d7de] rounded-md hover:bg-gray-50 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={emailConfig.remindAt.includes(day)}
-                            onChange={(e) => {
-                              const newRemindAt = e.target.checked
-                                ? [...emailConfig.remindAt, day].sort((a, b) => b - a)
-                                : emailConfig.remindAt.filter((d) => d !== day);
-                              updateEmailConfig('remindAt', newRemindAt);
-                            }}
-                            className="w-4 h-4 text-[#0969da] rounded border-gray-300 focus:ring-[#0969da]"
-                          />
-                          <span className="text-sm font-medium text-[#24292f]">{day} day{day > 1 ? 's' : ''}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-[#ddf4ff] border border-[#54aeff] rounded-md p-4">
-                    <div className="text-sm font-semibold text-[#24292f] mb-2">Setup Guide</div>
-                    <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                      <li>Visit <a href="https://myaccount.google.com/apppasswords" target="_blank" className="text-[#0969da] underline font-medium">Google App Passwords</a></li>
-                      <li>Create app password for "Mail"</li>
-                      <li>Copy and paste above</li>
-                    </ol>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={saveEmailConfig}
-                      disabled={saving}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#2da44e] text-white font-medium rounded-md hover:bg-[#2c974b] transition-colors disabled:opacity-50"
-                    >
-                      <Save className="w-4 h-4" />
-                      {saving ? 'Saving...' : 'Save Email Settings'}
-                    </button>
-
-                    <button
-                      onClick={testEmail}
-                      disabled={testingEmail}
-                      className="px-4 py-2 bg-[#0969da] text-white font-medium rounded-md hover:bg-[#0860ca] transition-colors disabled:opacity-50 flex items-center justify-center"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </div>
-                </>
-              )}
+                ) : (
+                  <p className="text-sm text-gray-500 py-4">No email accounts connected. Visit the Email tab to connect Gmail.</p>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Advanced Tab */}
-          {activeTab === 'advanced' && (
+          {/* Preferences Tab */}
+          {activeTab === 'preferences' && (
             <div className="space-y-6">
-              <div className="bg-[#f6f8fa] border border-[#d0d7de] rounded-md p-6">
-                <h3 className="font-semibold text-[#24292f] mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-gray-600" />
-                  Active Scheduled Jobs
-                </h3>
-                <div className="space-y-2">
-                  {activeJobs.map((job) => (
-                    <div key={job.name} className="flex items-center justify-between p-3 bg-white border border-[#d0d7de] rounded-md">
-                      <span className="font-medium text-[#24292f]">{job.name}</span>
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 border border-green-200 text-xs font-semibold rounded-md">
-                        {job.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-[#fff8c5] border border-[#d4a72c] rounded-md p-4">
-                <div className="text-sm font-semibold text-[#24292f] mb-2">Advanced Settings</div>
-                <p className="text-sm text-gray-700">
-                  These settings control core system behavior. Changes take effect immediately.
+              <div className="bg-[#ddf4ff] border border-[#54aeff] rounded-md p-6 text-center">
+                <Sliders className="w-10 h-10 text-[#0969da] mx-auto mb-3" />
+                <h3 className="text-base font-semibold text-[#24292f] mb-2">Coming Soon</h3>
+                <p className="text-sm text-gray-600 max-w-md mx-auto">
+                  Automation settings, notification preferences, and scan scheduling will be available in a future update.
                 </p>
               </div>
             </div>
@@ -391,19 +222,5 @@ export default function Settings() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Toggle({ checked, onChange }) {
-  return (
-    <label className="relative inline-flex items-center cursor-pointer">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="sr-only peer"
-      />
-      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#0969da] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all border border-gray-300"></div>
-    </label>
   );
 }

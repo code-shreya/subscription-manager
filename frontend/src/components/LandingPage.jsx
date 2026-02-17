@@ -1,6 +1,6 @@
 import { ArrowRight, Mail, Building2, Calendar, BarChart3, Bell, Sparkles, Check } from 'lucide-react';
 
-export default function LandingPage({ onEnterDemo }) {
+export default function LandingPage({ onGetStarted, onLogin }) {
   const features = [
     {
       icon: Mail,
@@ -36,7 +36,7 @@ export default function LandingPage({ onEnterDemo }) {
 
   const stats = [
     { value: '365-Day', label: 'Email Scanning' },
-    { value: '₹ INR', label: 'Indian Currency' },
+    { value: 'INR', label: 'Indian Currency' },
     { value: 'Real-time', label: 'Bank Sync' },
     { value: 'AI-Powered', label: 'Detection' },
   ];
@@ -68,16 +68,16 @@ export default function LandingPage({ onEnterDemo }) {
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
               Smart subscription management for India. Connect your bank accounts, scan your emails,
-              and never miss a payment. Built with ₹ INR support and Indian banking integration.
+              and never miss a payment. Built with INR support and Indian banking integration.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4">
               <button
-                onClick={onEnterDemo}
+                onClick={onGetStarted}
                 className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-xl"
               >
-                Try Live Demo
+                Get Started
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
               <a
@@ -92,6 +92,14 @@ export default function LandingPage({ onEnterDemo }) {
                 View on GitHub
               </a>
             </div>
+
+            {/* Login link */}
+            <p className="text-gray-400 text-sm mb-12">
+              Already have an account?{' '}
+              <button onClick={onLogin} className="text-[#58a6ff] hover:underline font-medium">
+                Log in
+              </button>
+            </p>
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
@@ -154,8 +162,8 @@ export default function LandingPage({ onEnterDemo }) {
             {[
               {
                 step: '1',
-                title: 'Connect Your Accounts',
-                description: 'Link your Gmail and bank accounts securely. We use OAuth 2.0 for maximum security.',
+                title: 'Create Your Account',
+                description: 'Sign up in seconds. Then link your Gmail and bank accounts securely with OAuth 2.0.',
               },
               {
                 step: '2',
@@ -188,7 +196,7 @@ export default function LandingPage({ onEnterDemo }) {
               Built Specifically for India
             </h3>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Native support for Indian banks, ₹ INR currency, and popular Indian subscription services like Netflix, Prime Video, Zomato Gold, and more.
+              Native support for Indian banks, INR currency, and popular Indian subscription services like Netflix, Prime Video, Zomato Gold, and more.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               {['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank', 'Kotak Mahindra', 'Gmail'].map((bank, idx) => (
@@ -199,10 +207,10 @@ export default function LandingPage({ onEnterDemo }) {
               ))}
             </div>
             <button
-              onClick={onEnterDemo}
+              onClick={onGetStarted}
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 text-lg font-semibold rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-xl"
             >
-              Try Demo Now
+              Get Started Free
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>
@@ -214,14 +222,14 @@ export default function LandingPage({ onEnterDemo }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between text-gray-400 text-sm">
             <div className="flex items-center gap-4 mb-4 md:mb-0">
-              <span>© 2026 SubManager</span>
-              <span>•</span>
+              <span>&copy; 2026 SubManager</span>
+              <span>&bull;</span>
               <a href="https://github.com/code-shreya/subscription-manager" className="hover:text-white transition-colors">
                 GitHub
               </a>
             </div>
             <div className="flex items-center gap-2">
-              <span>Made with ❤️ for smarter subscription tracking</span>
+              <span>Made with love for smarter subscription tracking</span>
             </div>
           </div>
         </div>
