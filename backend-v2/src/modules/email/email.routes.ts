@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { emailService } from './email.service';
+import { authenticate } from '../../shared/middleware/authenticate';
 
 // Validation schemas
 const connectEmailSchema = z.object({
@@ -20,6 +21,9 @@ const scanEmailsSchema = z.object({
  * Email routes
  */
 export async function emailRoutes(fastify: FastifyInstance) {
+  // All email routes require authentication
+  fastify.addHook('preHandler', authenticate);
+
   // Get available email providers
   fastify.get('/email/providers', async (_request: FastifyRequest, reply: FastifyReply) => {
     const providers = emailService.getAvailableProviders();
@@ -60,7 +64,7 @@ export async function emailRoutes(fastify: FastifyInstance) {
       },
     },
     async (request: FastifyRequest<{ Body: z.infer<typeof connectEmailSchema> }>, reply: FastifyReply) => {
-      const userId = (request as any).userId;
+      const userId = request.user!.userId;
 
       const validation = connectEmailSchema.safeParse(request.body);
       if (!validation.success) {
@@ -118,7 +122,7 @@ export async function emailRoutes(fastify: FastifyInstance) {
       },
     },
     async (request: FastifyRequest<{ Body: z.infer<typeof connectEmailSchema> }>, reply: FastifyReply) => {
-      const userId = (request as any).userId;
+      const userId = request.user!.userId;
 
       const validation = connectEmailSchema.safeParse(request.body);
       if (!validation.success) {
@@ -147,7 +151,7 @@ export async function emailRoutes(fastify: FastifyInstance) {
 
   // Get all email connections
   fastify.get('/email/connections', async (request: FastifyRequest, reply: FastifyReply) => {
-    const userId = (request as any).userId;
+    const userId = request.user!.userId;
 
     const connections = await emailService.getEmailConnections(userId);
 
@@ -169,7 +173,7 @@ export async function emailRoutes(fastify: FastifyInstance) {
   fastify.get<{ Params: { accountId: string } }>(
     '/email/connections/:accountId',
     async (request: FastifyRequest<{ Params: { accountId: string } }>, reply: FastifyReply) => {
-      const userId = (request as any).userId;
+      const userId = request.user!.userId;
       const { accountId } = request.params;
 
       const account = await emailService.getConnectedAccount(userId, accountId);
@@ -197,7 +201,7 @@ export async function emailRoutes(fastify: FastifyInstance) {
   fastify.get<{ Params: { accountId: string } }>(
     '/email/connections/:accountId/status',
     async (request: FastifyRequest<{ Params: { accountId: string } }>, reply: FastifyReply) => {
-      const userId = (request as any).userId;
+      const userId = request.user!.userId;
       const { accountId } = request.params;
 
       try {
@@ -238,7 +242,7 @@ export async function emailRoutes(fastify: FastifyInstance) {
       }>,
       reply: FastifyReply
     ) => {
-      const userId = (request as any).userId;
+      const userId = request.user!.userId;
       const { accountId } = request.params;
 
       const validation = scanEmailsSchema.safeParse(request.body);
@@ -279,7 +283,7 @@ export async function emailRoutes(fastify: FastifyInstance) {
   fastify.post<{ Params: { accountId: string } }>(
     '/email/connections/:accountId/refresh',
     async (request: FastifyRequest<{ Params: { accountId: string } }>, reply: FastifyReply) => {
-      const userId = (request as any).userId;
+      const userId = request.user!.userId;
       const { accountId } = request.params;
 
       try {
@@ -301,7 +305,7 @@ export async function emailRoutes(fastify: FastifyInstance) {
   fastify.delete<{ Params: { accountId: string } }>(
     '/email/connections/:accountId',
     async (request: FastifyRequest<{ Params: { accountId: string } }>, reply: FastifyReply) => {
-      const userId = (request as any).userId;
+      const userId = request.user!.userId;
       const { accountId } = request.params;
 
       try {

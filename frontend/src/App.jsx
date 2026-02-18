@@ -20,16 +20,25 @@ function App() {
   const [authView, setAuthView] = useState('landing');
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // Handle OAuth callback (Gmail)
+  // Handle OAuth callback (Gmail popup)
+  const [oauthStatus, setOauthStatus] = useState(null); // null | 'connecting' | 'success' | 'error'
+  const isOAuthPopup = new URLSearchParams(window.location.search).has('code');
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     if (code && isAuthenticated) {
+      setOauthStatus('connecting');
       api.handleGmailCallback(code)
         .then(() => {
-          window.history.replaceState({}, document.title, window.location.pathname);
+          setOauthStatus('success');
+          // Close popup — the main window's polling will detect the new connection
+          setTimeout(() => window.close(), 1000);
         })
-        .catch((err) => console.error('Gmail callback failed:', err));
+        .catch((err) => {
+          console.error('Gmail callback failed:', err);
+          setOauthStatus('error');
+        });
     }
   }, [isAuthenticated]);
 
@@ -37,6 +46,34 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // If this is an OAuth popup, show minimal UI instead of the full app
+  if (isOAuthPopup) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          {oauthStatus === 'connecting' && (
+            <>
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent mx-auto mb-3"></div>
+              <p className="text-sm text-gray-600">Connecting Gmail...</p>
+            </>
+          )}
+          {oauthStatus === 'success' && (
+            <p className="text-sm text-green-600 font-medium">Gmail connected! This window will close automatically.</p>
+          )}
+          {oauthStatus === 'error' && (
+            <p className="text-sm text-red-600 font-medium">Failed to connect Gmail. Please close this window and try again.</p>
+          )}
+          {!oauthStatus && (
+            <>
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent mx-auto mb-3"></div>
+              <p className="text-sm text-gray-600">Processing...</p>
+            </>
+          )}
+        </div>
       </div>
     );
   }
