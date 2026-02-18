@@ -105,7 +105,7 @@ export default function SubscriptionList() {
   };
 
   const categories = [...new Set(subscriptions.map((sub) => sub.category))];
-  const totalSpending = filteredSubscriptions.reduce((sum, sub) => sum + (sub.amount || 0), 0);
+  const totalSpending = filteredSubscriptions.reduce((sum, sub) => sum + (parseFloat(sub.amount) || 0), 0);
 
   if (loading) {
     return (

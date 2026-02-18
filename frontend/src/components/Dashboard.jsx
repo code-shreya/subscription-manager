@@ -128,7 +128,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="Next 30 Days"
-          value={`₹${analytics.upcomingRenewals.reduce((sum, sub) => sum + (sub.amount || 0), 0).toFixed(2)}`}
+          value={`₹${analytics.upcomingRenewals.reduce((sum, sub) => sum + (parseFloat(sub.amount) || 0), 0).toFixed(2)}`}
           subtitle={`${analytics.upcomingRenewals.length} renewals`}
           icon={Calendar}
         />
@@ -295,10 +295,10 @@ export default function Dashboard() {
                     <td className="py-3 px-6 text-sm font-medium text-gray-900">{cat.category}</td>
                     <td className="py-3 px-6 text-sm text-gray-600 text-right">{cat.count}</td>
                     <td className="py-3 px-6 text-sm font-medium text-gray-900 text-right">
-                      ₹{cat.monthly_amount.toFixed(2)}
+                      ₹{parseFloat(cat.monthly_amount).toFixed(2)}
                     </td>
                     <td className="py-3 px-6 text-sm text-gray-600 text-right">
-                      ₹{(cat.monthly_amount * 12).toFixed(2)}
+                      ₹{(parseFloat(cat.monthly_amount) * 12).toFixed(2)}
                     </td>
                   </tr>
                 ))}
