@@ -31,7 +31,8 @@ async function fetchWithAuth(url, options = {}) {
       });
 
       if (refreshRes.ok) {
-        const tokens = await refreshRes.json();
+        const refreshData = await refreshRes.json();
+        const tokens = refreshData.tokens || refreshData;
         localStorage.setItem(TOKEN_KEYS.access, tokens.accessToken);
         localStorage.setItem(TOKEN_KEYS.refresh, tokens.refreshToken);
 

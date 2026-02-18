@@ -63,7 +63,8 @@ export function AuthProvider({ children }) {
           });
 
           if (refreshRes.ok) {
-            const tokens = await refreshRes.json();
+            const refreshData = await refreshRes.json();
+            const tokens = refreshData.tokens || refreshData;
             storeTokens(tokens.accessToken, tokens.refreshToken);
 
             const meRes = await fetch('/api/auth/me', {
@@ -112,7 +113,8 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || 'Login failed');
     }
 
-    storeTokens(data.accessToken, data.refreshToken);
+    const tokens = data.tokens || data;
+    storeTokens(tokens.accessToken, tokens.refreshToken);
     setUser(data.user);
     setIsAuthenticated(true);
   };
@@ -130,7 +132,8 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || 'Registration failed');
     }
 
-    storeTokens(data.accessToken, data.refreshToken);
+    const tokens = data.tokens || data;
+    storeTokens(tokens.accessToken, tokens.refreshToken);
     setUser(data.user);
     setIsAuthenticated(true);
   };
