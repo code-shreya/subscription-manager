@@ -3,17 +3,31 @@ import { api } from '../api';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
 const categoryColors = {
-  'Streaming': 'bg-[#0969da] text-white',
-  'Music': 'bg-[#8250df] text-white',
-  'Productivity': 'bg-[#1f6feb] text-white',
-  'Cloud Storage': 'bg-[#0969da] text-white',
-  'Gaming': 'bg-[#fb8500] text-white',
-  'News & Media': 'bg-[#9a6700] text-white',
-  'Fitness': 'bg-[#1a7f37] text-white',
-  'Software': 'bg-[#8250df] text-white',
-  'Rentals': 'bg-[#bf8700] text-white',
-  'Investment': 'bg-[#0969da] text-white',
-  'Other': 'bg-gray-600 text-white',
+  'Streaming': 'bg-blue-100 text-blue-700',
+  'Music': 'bg-purple-100 text-purple-700',
+  'Productivity': 'bg-cyan-100 text-cyan-700',
+  'Cloud Storage': 'bg-sky-100 text-sky-700',
+  'Gaming': 'bg-orange-100 text-orange-700',
+  'News & Media': 'bg-amber-100 text-amber-700',
+  'Fitness': 'bg-emerald-100 text-emerald-700',
+  'Software': 'bg-violet-100 text-violet-700',
+  'Rentals': 'bg-rose-100 text-rose-700',
+  'Investment': 'bg-indigo-100 text-indigo-700',
+  'Other': 'bg-gray-100 text-gray-700',
+};
+
+const categoryDotColors = {
+  'Streaming': 'bg-blue-500',
+  'Music': 'bg-purple-500',
+  'Productivity': 'bg-cyan-500',
+  'Cloud Storage': 'bg-sky-500',
+  'Gaming': 'bg-orange-500',
+  'News & Media': 'bg-amber-500',
+  'Fitness': 'bg-emerald-500',
+  'Software': 'bg-violet-500',
+  'Rentals': 'bg-rose-500',
+  'Investment': 'bg-indigo-500',
+  'Other': 'bg-gray-500',
 };
 
 export default function CalendarView() {
@@ -24,10 +38,7 @@ export default function CalendarView() {
   useEffect(() => {
     loadSubscriptions();
 
-    const handleUpdate = () => {
-      loadSubscriptions();
-    };
-
+    const handleUpdate = () => loadSubscriptions();
     window.addEventListener('subscriptions-updated', handleUpdate);
     return () => window.removeEventListener('subscriptions-updated', handleUpdate);
   }, []);
@@ -48,21 +59,14 @@ export default function CalendarView() {
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    return { daysInMonth, startingDayOfWeek, year, month };
+    return { daysInMonth: lastDay.getDate(), startingDayOfWeek: firstDay.getDay(), year, month };
   };
 
   const getSubscriptionsForDate = (date) => {
     return subscriptions.filter((sub) => {
       if (!sub.next_billing_date) return false;
       const subDate = new Date(sub.next_billing_date);
-      return (
-        subDate.getDate() === date.getDate() &&
-        subDate.getMonth() === date.getMonth() &&
-        subDate.getFullYear() === date.getFullYear()
-      );
+      return subDate.getDate() === date.getDate() && subDate.getMonth() === date.getMonth() && subDate.getFullYear() === date.getFullYear();
     });
   };
 
@@ -78,73 +82,55 @@ export default function CalendarView() {
   const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   const days = [];
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push(null);
-  }
-  for (let i = 1; i <= daysInMonth; i++) {
-    days.push(i);
-  }
+  for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0969da]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {/* Page Header */}
-      <div className="pb-4 border-b border-[#d0d7de]">
-        <h1 className="text-2xl font-semibold text-[#24292f]">Calendar</h1>
-        <p className="text-sm text-gray-600 mt-1">View your upcoming subscription renewals</p>
+      <div className="pb-4 border-b border-gray-200">
+        <h1 className="text-2xl font-semibold text-gray-900">Calendar</h1>
+        <p className="text-sm text-gray-500 mt-1">View your upcoming subscription renewals</p>
       </div>
 
-      {/* Calendar Card */}
-      <div className="bg-white border border-[#d0d7de] rounded-md overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {/* Calendar Header */}
-        <div className="bg-[#24292f] px-6 py-4">
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigateMonth(-1)}
-              className="p-2 text-white hover:bg-white/10 rounded-md transition-colors"
-            >
+            <button onClick={() => navigateMonth(-1)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-lg transition-colors">
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="text-center">
-              <h2 className="text-xl font-semibold text-white">{monthName}</h2>
-              <p className="text-sm text-gray-300 mt-1">
-                {subscriptions.filter(s => new Date(s.next_billing_date).getMonth() === month).length} renewals this month
+              <h2 className="text-lg font-semibold text-gray-900">{monthName}</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {subscriptions.filter(s => s.next_billing_date && new Date(s.next_billing_date).getMonth() === month).length} renewals this month
               </p>
             </div>
-            <button
-              onClick={() => navigateMonth(1)}
-              className="p-2 text-white hover:bg-white/10 rounded-md transition-colors"
-            >
+            <button onClick={() => navigateMonth(1)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-lg transition-colors">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="p-6">
-          <div className="grid grid-cols-7 gap-2 mb-2">
+        <div className="p-4">
+          <div className="grid grid-cols-7 gap-1 mb-1">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div
-                key={day}
-                className="text-center text-xs font-semibold text-gray-600 uppercase py-2"
-              >
+              <div key={day} className="text-center text-xs font-medium text-gray-400 uppercase py-2">
                 {day}
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1">
             {days.map((day, index) => {
-              if (!day) {
-                return <div key={`empty-${index}`} className="aspect-square" />;
-              }
+              if (!day) return <div key={`empty-${index}`} className="aspect-square" />;
 
               const date = new Date(year, month, day);
               const daySubscriptions = getSubscriptionsForDate(date);
@@ -154,46 +140,34 @@ export default function CalendarView() {
               return (
                 <div
                   key={day}
-                  className={`
-                    relative aspect-square p-2 rounded-md border transition-colors
-                    ${isToday
-                      ? 'border-[#0969da] bg-[#ddf4ff] border-2'
+                  className={`aspect-square p-1.5 rounded-lg border transition-colors ${
+                    isToday
+                      ? 'border-indigo-300 bg-indigo-50'
                       : daySubscriptions.length > 0
-                      ? 'border-[#0969da] bg-[#f6f8fa] hover:bg-gray-100'
+                      ? 'border-gray-200 bg-white hover:bg-gray-50'
                       : isPast
-                      ? 'border-[#d0d7de] bg-gray-50'
-                      : 'border-[#d0d7de] bg-white hover:bg-gray-50'
-                    }
-                  `}
+                      ? 'border-transparent bg-gray-50/50'
+                      : 'border-transparent bg-white hover:bg-gray-50'
+                  }`}
                 >
                   <div className="h-full flex flex-col">
-                    <div
-                      className={`text-sm font-semibold mb-1 ${
-                        isToday
-                          ? 'text-[#0969da]'
-                          : isPast
-                          ? 'text-gray-400'
-                          : daySubscriptions.length > 0
-                          ? 'text-[#24292f]'
-                          : 'text-gray-600'
-                      }`}
-                    >
+                    <div className={`text-xs font-medium mb-0.5 ${
+                      isToday ? 'text-indigo-600 font-semibold' : isPast ? 'text-gray-300' : daySubscriptions.length > 0 ? 'text-gray-900' : 'text-gray-400'
+                    }`}>
                       {day}
                     </div>
                     <div className="flex-1 overflow-hidden space-y-0.5">
-                      {daySubscriptions.slice(0, 3).map((sub) => (
+                      {daySubscriptions.slice(0, 2).map((sub) => (
                         <div
                           key={sub.id}
-                          className={`${categoryColors[sub.category] || categoryColors['Other']} text-xs px-1.5 py-0.5 rounded font-medium truncate`}
+                          className={`${categoryColors[sub.category] || categoryColors['Other']} text-[10px] px-1 py-0.5 rounded font-medium truncate`}
                           title={`${sub.name} - ₹${sub.amount}`}
                         >
                           {sub.name}
                         </div>
                       ))}
-                      {daySubscriptions.length > 3 && (
-                        <div className="text-xs text-[#0969da] font-semibold px-1">
-                          +{daySubscriptions.length - 3} more
-                        </div>
+                      {daySubscriptions.length > 2 && (
+                        <div className="text-[10px] text-indigo-600 font-medium px-1">+{daySubscriptions.length - 2}</div>
                       )}
                     </div>
                   </div>
@@ -204,9 +178,9 @@ export default function CalendarView() {
         </div>
       </div>
 
-      {/* Upcoming Renewals List */}
-      <div className="bg-white border border-[#d0d7de] rounded-md p-6">
-        <h3 className="text-lg font-semibold text-[#24292f] mb-4">Upcoming Renewals</h3>
+      {/* Upcoming Renewals */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <h3 className="text-base font-semibold text-gray-900 mb-4">Upcoming Renewals</h3>
         {subscriptions.length > 0 ? (
           <div className="space-y-2">
             {subscriptions
@@ -214,44 +188,27 @@ export default function CalendarView() {
               .sort((a, b) => new Date(a.next_billing_date) - new Date(b.next_billing_date))
               .slice(0, 10)
               .map((sub) => {
-                const daysUntil = Math.ceil(
-                  (new Date(sub.next_billing_date) - new Date()) / (1000 * 60 * 60 * 24)
-                );
+                const daysUntil = Math.ceil((new Date(sub.next_billing_date) - new Date()) / (1000 * 60 * 60 * 24));
                 const isUrgent = daysUntil <= 7;
-                const categoryColor = categoryColors[sub.category] || categoryColors['Other'];
 
                 return (
                   <div
                     key={sub.id}
-                    className={`flex items-center gap-4 p-3 rounded-md border hover:bg-gray-50 transition-colors ${
-                      isUrgent
-                        ? 'border-[#bf8700] bg-[#fff8c5]'
-                        : 'border-[#d0d7de]'
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                      isUrgent ? 'border-amber-200 bg-amber-50' : 'border-gray-100 hover:bg-gray-50'
                     }`}
                   >
-                    <div className={`w-1 h-12 rounded-full ${categoryColor}`}></div>
+                    <div className={`w-1.5 h-10 rounded-full ${categoryDotColors[sub.category] || categoryDotColors['Other']}`} />
                     <div className="flex-1">
-                      <div className="font-semibold text-[#24292f]">{sub.name}</div>
-                      <div className="text-sm text-gray-600">
-                        {new Date(sub.next_billing_date).toLocaleDateString('en-US', {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
+                      <div className="text-sm font-medium text-gray-900">{sub.name}</div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(sub.next_billing_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-[#24292f]">₹{sub.amount || '—'}</div>
-                      <div
-                        className={`text-xs font-medium ${
-                          isUrgent ? 'text-[#9a6700]' : 'text-gray-600'
-                        }`}
-                      >
-                        {daysUntil === 0
-                          ? 'Today'
-                          : daysUntil === 1
-                          ? 'Tomorrow'
-                          : `in ${daysUntil} days`}
+                      <div className="text-sm font-semibold text-gray-900">₹{sub.amount || '---'}</div>
+                      <div className={`text-xs font-medium ${isUrgent ? 'text-amber-600' : 'text-gray-400'}`}>
+                        {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `in ${daysUntil}d`}
                       </div>
                     </div>
                   </div>
@@ -260,20 +217,19 @@ export default function CalendarView() {
           </div>
         ) : (
           <div className="text-center py-8 text-gray-400">
-            <CalendarIcon className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+            <CalendarIcon className="w-10 h-10 mx-auto mb-2 text-gray-300" />
             <p className="text-sm">No upcoming renewals</p>
           </div>
         )}
       </div>
 
-      {/* Color Legend */}
-      <div className="bg-[#f6f8fa] border border-[#d0d7de] rounded-md p-6">
-        <h3 className="text-sm font-semibold text-[#24292f] mb-3">Categories</h3>
+      {/* Legend */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4">
         <div className="flex flex-wrap gap-3">
-          {Object.entries(categoryColors).map(([category, color]) => (
-            <div key={category} className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded ${color}`}></div>
-              <span className="text-xs text-gray-600">{category}</span>
+          {Object.entries(categoryDotColors).map(([category, color]) => (
+            <div key={category} className="flex items-center gap-1.5">
+              <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
+              <span className="text-xs text-gray-500">{category}</span>
             </div>
           ))}
         </div>
