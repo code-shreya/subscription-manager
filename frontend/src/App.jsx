@@ -12,6 +12,7 @@ import NotificationBell from './components/NotificationBell';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -166,12 +167,14 @@ function App() {
       {/* Main Content */}
       <main className="min-h-[calc(100vh-8rem)]">
         <div className="mx-auto px-4 py-6 max-w-[1280px]">
-          {activeTab === 'dashboard' && <Dashboard key="dashboard" />}
-          {activeTab === 'subscriptions' && <SubscriptionList key="subscriptions" />}
-          {activeTab === 'calendar' && <CalendarView key="calendar" />}
-          {activeTab === 'bank' && <ConnectedAccounts key="bank" />}
-          {activeTab === 'scanner' && <EmailScanner key="scanner" />}
-          {activeTab === 'settings' && <Settings key="settings" />}
+          <ErrorBoundary key={activeTab}>
+            {activeTab === 'dashboard' && <Dashboard key="dashboard" />}
+            {activeTab === 'subscriptions' && <SubscriptionList key="subscriptions" />}
+            {activeTab === 'calendar' && <CalendarView key="calendar" />}
+            {activeTab === 'bank' && <ConnectedAccounts key="bank" />}
+            {activeTab === 'scanner' && <EmailScanner key="scanner" />}
+            {activeTab === 'settings' && <Settings key="settings" />}
+          </ErrorBoundary>
         </div>
       </main>
 
