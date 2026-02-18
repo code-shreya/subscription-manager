@@ -62,7 +62,7 @@ export default function RegisterPage({ onSwitchToLogin }) {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 sm:p-6">
           <h2 className="text-xl font-semibold text-gray-900 text-center mb-6">Create your account</h2>
 
           {error && (
@@ -71,7 +71,7 @@ export default function RegisterPage({ onSwitchToLogin }) {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Name (optional)</label>
               <div className="relative">

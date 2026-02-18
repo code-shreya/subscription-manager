@@ -38,7 +38,7 @@ export default function LoginPage({ onSwitchToRegister }) {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 sm:p-6">
           <h2 className="text-xl font-semibold text-gray-900 text-center mb-6">Sign in to your account</h2>
 
           {error && (

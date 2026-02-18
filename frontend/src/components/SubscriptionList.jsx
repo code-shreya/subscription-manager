@@ -196,7 +196,7 @@ export default function SubscriptionList() {
 
                     {/* Amount */}
                     <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-2xl font-semibold text-[gray-900]">
+                      <span className="text-xl sm:text-2xl font-semibold text-[gray-900]">
                         {sub.amount ? `₹${sub.amount}` : '—'}
                       </span>
                       {sub.billing_cycle && (
@@ -231,14 +231,14 @@ export default function SubscriptionList() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleEdit(sub)}
-                      className="p-2 text-gray-600 hover:bg-gray-100 hover:text-[gray-900] rounded-lg transition-colors"
+                      className="p-2.5 text-gray-600 hover:bg-gray-100 hover:text-[gray-900] rounded-lg transition-colors"
                       title="Edit"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(sub.id)}
-                      className="p-2 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                      className="p-2.5 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -250,7 +250,7 @@ export default function SubscriptionList() {
           })}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-12 text-center">
           <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
             <DollarSign className="w-8 h-8 text-gray-400" />
           </div>

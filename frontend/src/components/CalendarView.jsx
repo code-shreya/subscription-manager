@@ -102,7 +102,7 @@ export default function CalendarView() {
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {/* Calendar Header */}
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+        <div className="bg-gray-50 border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <button onClick={() => navigateMonth(-1)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-lg transition-colors">
               <ChevronLeft className="w-5 h-5" />
@@ -119,10 +119,10 @@ export default function CalendarView() {
           </div>
         </div>
 
-        <div className="p-4">
+        <div className="p-2 sm:p-4">
           <div className="grid grid-cols-7 gap-1 mb-1">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-center text-xs font-medium text-gray-400 uppercase py-2">
+              <div key={day} className="text-center text-[10px] sm:text-xs font-medium text-gray-400 uppercase py-2">
                 {day}
               </div>
             ))}
@@ -160,7 +160,7 @@ export default function CalendarView() {
                       {daySubscriptions.slice(0, 2).map((sub) => (
                         <div
                           key={sub.id}
-                          className={`${categoryColors[sub.category] || categoryColors['Other']} text-[10px] px-1 py-0.5 rounded font-medium truncate`}
+                          className={`${categoryColors[sub.category] || categoryColors['Other']} text-[10px] px-1 py-0.5 rounded font-medium truncate max-w-full overflow-hidden`}
                           title={`${sub.name} - ₹${sub.amount}`}
                         >
                           {sub.name}

@@ -61,14 +61,14 @@ export default function Settings() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 overflow-x-auto">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${isActive ? 'bg-white text-indigo-700 border-b-2 border-indigo-600 -mb-px' : 'text-gray-500 hover:bg-gray-50'}`}>
-                <Icon className="w-4 h-4" /> {tab.label}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${isActive ? 'bg-white text-indigo-700 border-b-2 border-indigo-600 -mb-px' : 'text-gray-500 hover:bg-gray-50'}`}>
+                <Icon className="w-4 h-4" /> <span className="hidden sm:inline">{tab.label}</span>
               </button>
             );
           })}

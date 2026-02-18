@@ -85,7 +85,7 @@ export default function NotificationBell() {
       </button>
 
       {showDropdown && (
-        <div className="fixed top-14 right-4 w-96 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
+        <div className="fixed top-14 right-0 sm:right-4 w-[calc(100vw-2rem)] sm:w-96 mx-auto left-0 sm:left-auto bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
             <div className="flex items-center gap-2">

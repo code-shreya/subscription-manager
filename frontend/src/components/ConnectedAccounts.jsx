@@ -101,7 +101,7 @@ export default function ConnectedAccounts() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-200">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Bank Integration</h1>
           <p className="text-sm text-gray-500 mt-1">Connect accounts and auto-detect subscriptions</p>
@@ -178,7 +178,7 @@ export default function ConnectedAccounts() {
               const confidence = sub.confidence_score ?? sub.confidence ?? 0;
               const display = confidence > 1 ? confidence : confidence * 100;
               return (
-                <div key={sub.id} className="flex items-center justify-between p-3 bg-white border border-emerald-200 rounded-lg">
+                <div key={sub.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white border border-emerald-200 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-medium text-gray-900">{sub.name || sub.merchant}</span>
@@ -192,8 +192,8 @@ export default function ConnectedAccounts() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleImport(sub.id)} className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700">Import</button>
-                    <button onClick={() => handleDismiss(sub.id)} className="px-3 py-1.5 bg-white text-gray-600 border border-gray-300 text-xs font-medium rounded-lg hover:bg-gray-50">Dismiss</button>
+                    <button onClick={() => handleImport(sub.id)} className="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700">Import</button>
+                    <button onClick={() => handleDismiss(sub.id)} className="px-3 py-2 bg-white text-gray-600 border border-gray-300 text-xs font-medium rounded-lg hover:bg-gray-50">Dismiss</button>
                   </div>
                 </div>
               );

@@ -119,7 +119,7 @@ function App() {
                 {showUserMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-                    <div className="absolute right-0 mt-1 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                    <div className="absolute right-0 mt-1 w-56 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
                       <div className="px-4 py-3 border-b border-gray-100">
                         <div className="text-sm font-medium text-gray-900 truncate">{user?.name || 'User'}</div>
                         <div className="text-xs text-gray-500 truncate">{user?.email}</div>

@@ -73,13 +73,13 @@ export default function LandingPage({ onGetStarted, onLogin }) {
 
       {/* Hero Section */}
       <div className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-20 text-center">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-20 pb-12 md:pb-20 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-full mb-6 border border-indigo-100">
             <Sparkles className="w-3.5 h-3.5" />
             Built for India
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-5 leading-tight tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-5 leading-tight tracking-tight">
             Track all your subscriptions
             <br />
             <span className="text-indigo-600">in one place</span>
@@ -141,7 +141,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               return (
                 <div
                   key={idx}
-                  className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md hover:border-gray-300 transition-all"
+                  className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 hover:shadow-md hover:border-gray-300 transition-all"
                 >
                   <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5 text-indigo-600" />
@@ -184,7 +184,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       {/* CTA */}
       <div className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-indigo-600 rounded-2xl p-10 text-center">
+          <div className="bg-indigo-600 rounded-2xl p-6 md:p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
               Built specifically for India
             </h2>

@@ -151,8 +151,8 @@ export default function Dashboard() {
         {pieData.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Pie Chart */}
-            <div className="lg:col-span-2">
-              <ResponsiveContainer width="100%" height={400}>
+            <div className="lg:col-span-2 h-[250px] md:h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -160,7 +160,7 @@ export default function Dashboard() {
                     cy="50%"
                     labelLine={false}
                     label={renderCustomLabel}
-                    outerRadius={140}
+                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 100 : 140}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -247,7 +247,7 @@ export default function Dashboard() {
             {analytics.upcomingRenewals.map((sub) => (
               <div
                 key={sub.id}
-                className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between px-3 md:px-6 py-3 md:py-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 mb-0.5">{sub.name}</div>
@@ -283,21 +283,21 @@ export default function Dashboard() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wide">Category</th>
-                  <th className="text-right py-2 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wide">Count</th>
-                  <th className="text-right py-2 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wide">Monthly</th>
-                  <th className="text-right py-2 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wide">Yearly</th>
+                  <th className="text-left py-2 px-3 md:px-6 text-xs font-semibold text-gray-600 uppercase tracking-wide">Category</th>
+                  <th className="text-right py-2 px-3 md:px-6 text-xs font-semibold text-gray-600 uppercase tracking-wide">Count</th>
+                  <th className="text-right py-2 px-3 md:px-6 text-xs font-semibold text-gray-600 uppercase tracking-wide">Monthly</th>
+                  <th className="text-right py-2 px-3 md:px-6 text-xs font-semibold text-gray-600 uppercase tracking-wide">Yearly</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {analytics.categoryBreakdown.map((cat, idx) => (
                   <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-6 text-sm font-medium text-gray-900">{cat.category}</td>
-                    <td className="py-3 px-6 text-sm text-gray-600 text-right">{cat.count}</td>
-                    <td className="py-3 px-6 text-sm font-medium text-gray-900 text-right">
+                    <td className="py-2 md:py-3 px-3 md:px-6 text-sm font-medium text-gray-900">{cat.category}</td>
+                    <td className="py-2 md:py-3 px-3 md:px-6 text-sm text-gray-600 text-right">{cat.count}</td>
+                    <td className="py-2 md:py-3 px-3 md:px-6 text-sm font-medium text-gray-900 text-right">
                       ₹{parseFloat(cat.monthly_amount).toFixed(2)}
                     </td>
-                    <td className="py-3 px-6 text-sm text-gray-600 text-right">
+                    <td className="py-2 md:py-3 px-3 md:px-6 text-sm text-gray-600 text-right">
                       ₹{(parseFloat(cat.monthly_amount) * 12).toFixed(2)}
                     </td>
                   </tr>
@@ -335,7 +335,7 @@ export default function Dashboard() {
 // GitHub-style stat card component
 function StatCard({ title, value, subtitle, change, icon: Icon, trend, variant }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-md p-4 hover:bg-gray-50 transition-colors">
+    <div className="bg-white border border-gray-200 rounded-md p-3 sm:p-4 hover:bg-gray-50 transition-colors">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">{title}</p>

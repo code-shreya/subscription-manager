@@ -130,7 +130,7 @@ export default function EmailScanner() {
 
       {/* Connection */}
       <div className={`border rounded-xl p-4 ${isConnected ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'}`}>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isConnected ? 'bg-emerald-500' : 'bg-gray-400'}`}>
               <Mail className="w-4 h-4 text-white" />
@@ -147,7 +147,7 @@ export default function EmailScanner() {
               <p className="text-xs text-gray-500">{isConnected ? 'Ready to scan' : 'Connect to get started'}</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             {!isConnected ? (
               <button onClick={handleConnect} className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                 <Mail className="w-4 h-4" /> Connect Gmail
@@ -215,11 +215,11 @@ export default function EmailScanner() {
                     </span>
                   </div>
                   <div className="flex gap-1.5 flex-shrink-0">
-                    <button onClick={() => handleImport(sub.id)} disabled={importing[sub.id]} className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50" title="Import">
-                      <Check className="w-3.5 h-3.5" />
+                    <button onClick={() => handleImport(sub.id)} disabled={importing[sub.id]} className="p-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50" title="Import">
+                      <Check className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDismiss(sub.id)} className="p-1.5 bg-white text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50" title="Dismiss">
-                      <X className="w-3.5 h-3.5" />
+                    <button onClick={() => handleDismiss(sub.id)} className="p-2.5 bg-white text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50" title="Dismiss">
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>

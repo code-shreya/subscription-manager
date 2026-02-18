@@ -39,7 +39,7 @@ export default function SubscriptionForm({ subscription, onSubmit, onCancel }) {
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-200">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto border border-gray-200">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between rounded-t-xl">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -63,7 +63,7 @@ export default function SubscriptionForm({ subscription, onSubmit, onCancel }) {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Amount</label>
               <input type="number" name="amount" value={formData.amount} onChange={handleChange} required step="0.01" min="0" placeholder="499" className={inputClass} />
