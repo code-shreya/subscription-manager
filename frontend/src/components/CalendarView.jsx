@@ -225,11 +225,11 @@ export default function CalendarView() {
 
       {/* Legend */}
       <div className="bg-white border border-gray-200 rounded-xl p-4">
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4" style={{ gap: '8px 16px' }}>
           {Object.entries(categoryDotColors).map(([category, color]) => (
             <div key={category} className="flex items-center gap-1.5">
-              <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
-              <span className="text-xs text-gray-500">{category}</span>
+              <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${color}`} />
+              <span className="text-xs text-gray-500 whitespace-nowrap">{category}</span>
             </div>
           ))}
         </div>
